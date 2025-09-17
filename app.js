@@ -30,7 +30,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
         console.error('Error opening database:', err.message);
     } else {
         console.log('Connected to the SQLite database.');
-        db.run(`CREATE TABLE IF NOT EXISTS (
+        db.run(`CREATE TABLE IF NOT EXISTS access (
             "User"	INTEGER NOT NULL UNIQUE,
 	        "Classes"	TEXT NOT NULL UNIQUE,
 	        "Lists"	TEXT NOT NULL,
@@ -39,8 +39,6 @@ const db = new sqlite3.Database(dbPath, (err) => {
         )`, (err) => {
             if (err) {
                 console.error('Error creating table:', err.message);
-            } else {
-                console.log('Table "access" created or already exists.');
             }
         });
     }
