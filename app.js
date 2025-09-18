@@ -1,41 +1,54 @@
-// Import modules
 const express = require('express');
 const path = require('path');
-const jwt = require('jsonwebtoken');
-const session = require('express-session');
-const { render } = require('ejs');
+const sqlite3 = require('sqlite3').verbose();
+const bodyParser = require('body-parser');
+const fs = require('fs');
 
-// Create an instance of Express
 const app = express();
+const port = 3000;
 
-// Set up EJS as the templating engine
-path.join(__dirname, 'views');
+// Set the view engine to ejs
 app.set('view engine', 'ejs');
-app.use(express.static(path.join(__dirname, 'public')))
 
-// Routes
-app.get('/', (req, res) => { 
-	res.render("teacher.ejs")
+// Set the views directory
+app.set('views', path.join(__dirname, 'views'));
+
+// Middleware to parse URL-encoded bodies
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Check if the database file exists
+const dbPath = './database.db';
+if (fs.existsSync(dbPath)) {
+    console.log('Database file exists.');
+} else {
+    console.log('Database file does not exist. It will be created.');
+}
+
+// Create or open the database
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        console.error('Error opening database:', err.message);
+    } else {
+        console.log('Connected to the SQLite database.');
+        db.run(`CREATE TABLE IF NOT EXISTS access (
+            "User"	INTEGER NOT NULL UNIQUE,
+	        "Classes"	TEXT NOT NULL UNIQUE,
+	        "Lists"	TEXT NOT NULL,
+	        "Questions"	TEXT NOT NULL,
+	        PRIMARY KEY("User" AUTOINCREMENT)
+        )`, (err) => {
+            if (err) {
+                console.error('Error creating table:', err.message);
+            }
+        });
+    }
 });
 
-app.get('/classes', (req, res) => { 
-	res.render("classes.ejs")
+// Meant for formbar Oauth testing
+app.get('/', (req, res) => {
+    res.send('here')
 });
 
-app.get('/lists', (req, res) => { 
-	res.render("lists.ejs")
-});
-
-app.get('/questions', (req, res) => { 
-	res.render("questions.ejs")
-});
-
-app.get('/queue', (req, res) => { 
-	res.render("queue.ejs")
-});
-
-// Start the server on port 3000
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
 });
