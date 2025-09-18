@@ -46,8 +46,31 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 // Meant for formbar Oauth testing
 app.get('/', (req, res) => {
-    res.send('here')
+    res.render('home');
 });
+
+app.get('/add', (req, res) => {
+    res.render('addQ');
+});
+
+app.post('/add', (req, res) => {
+    const Qdata = {
+        question : req.body.addQ,
+        answer1 : req.body.answer1,
+        answer2 : req.body.answer2,
+        answer3 : req.body.answer3,
+        answer4 : req.body.answer4}
+    
+    console.log(Qdata);
+});
+
+app.get('/class', (req, res) => {
+    res.render('Class');
+});
+
+app.get('/view',(req, res) => {
+    res.render('viewQuiz')
+})
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
