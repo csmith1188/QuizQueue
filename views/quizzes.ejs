@@ -21,8 +21,9 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    const socket = io(); // Establish connection to the server
+    //const socket = io(); // Establish connection to the server
     const quizList = document.getElementById('quizList');
+    const quizzes = [];
 
     function updateQuizList(quizzes) {
         quizList.innerHTML = '';
@@ -49,9 +50,9 @@
         }
     }
 
-    socket.on('connect', () => {
+    /*socket.on('connect', () => {
         socket.emit('requestQuizzes');
-    });
+    });*/
 </script>
 
 </html>
