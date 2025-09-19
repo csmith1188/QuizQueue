@@ -46,7 +46,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
-// Configure Websocket server to run on the same port as Express server
+/*// Configure Websocket server to run on the same port as Express server
 const server = http.createServer(app);
 const socket = io(server);
 socket.on('connection', (socket) => {
@@ -62,22 +62,41 @@ socket.on('connection', (socket) => {
         });
     });
 });
+*/
 
-// Start the server
-server.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
-});
-
-// Routes
 // Meant for formbar Oauth testing
 app.get('/', (req, res) => {
-    res.render("home.ejs")
+    res.render('home');
 });
+
+app.get('/add', (req, res) => {
+    res.render('addQ');
+});
+
+app.post('/add', (req, res) => {
+    const Qdata = {
+        question : req.body.addQ,
+        answer1 : req.body.answer1,
+        answer2 : req.body.answer2,
+        answer3 : req.body.answer3,
+        answer4 : req.body.answer4}
+    
+    console.log(Qdata);
+});
+
+app.get('/class', (req, res) => {
+    res.render('Class.ejs');
+});
+
 
 app.get('/quizzes', (req, res) => {
     res.render("quizzes.ejs")
 });
 
-app.get('/viewQuiz', (req, res) => {
-    res.render("viewQuiz.ejs")
+app.get('/view',(req, res) => {
+    res.render('viewQuiz.ejs')
+})
+
+app.listen(port, () => {
+    console.log(`Server is running on http://localhost:${port}`);
 });
