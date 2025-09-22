@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizzes</title>
+</head>
+
+<body>
+    <h1>Create a new Quiz:</h1>
+    <form action="/quizzes">
+        <label for="quizTitle">Quiz Title:</label>
+        <input type="text" id="quizTitle" name="quizTitle">
+    </form>
+    <button onclick="createQuiz()">Create Quiz</button>
+    <h2>Existing Quizzes:</h2>
+    <div id="quizList">
+    </div>
+</body>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    //const socket = io(); // Establish connection to the server
+    const quizList = document.getElementById('quizList');
+    const quizzes = [];
+
+    function updateQuizList(quizzes) {
+        quizList.innerHTML = '';
+        quizzes.forEach((quiz, index) => {
+            const quizItem = document.createElement('a');
+            quizItem.textContent = `${index + 1}. ${quiz.title}`;
+            quizItem.href = `/viewQuiz?quizTitle=${encodeURIComponent(quiz.title)}`;
+            quizList.appendChild(quizItem);
+        });
+    }
+
+    function createQuiz() {
+        const quizTitleInput = document.getElementById('quizTitle');
+        const quizTitle = quizTitleInput.value;
+
+        if (quizTitle) {
+            const newQuiz = { title: quizTitle };
+            quizzes.push(newQuiz);
+            console.log(quizzes);
+            quizTitleInput.value = '';
+            updateQuizList(quizzes);
+        } else {
+            alert('Please enter a quiz title.');
+        }
+    }
+
+    /*socket.on('connect', () => {
+        socket.emit('requestQuizzes');
+    });*/
+</script>
+
+</html>

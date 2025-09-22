@@ -1,4 +1,6 @@
 const express = require('express');
+const http = require('http');
+const io = require('socket.io');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
@@ -44,6 +46,24 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
+/*// Configure Websocket server to run on the same port as Express server
+const server = http.createServer(app);
+const socket = io(server);
+socket.on('connection', (socket) => {
+
+    socket.on('requestQuizzes', () => {
+        db.all("SELECT * FROM Lists", [], (err, rows) => {
+            if (err) {
+                console.error('Error fetching quizzes:', err.message);
+                socket.emit('quizzesData', { error: 'Error fetching quizzes' });
+            } else {
+                socket.emit('quizzesData', rows);
+            }
+        });
+    });
+});
+*/
+
 // Meant for formbar Oauth testing
 app.get('/', (req, res) => {
     res.render('home');
@@ -65,11 +85,16 @@ app.post('/add', (req, res) => {
 });
 
 app.get('/class', (req, res) => {
-    res.render('Class');
+    res.render('Class.ejs');
+});
+
+
+app.get('/quizzes', (req, res) => {
+    res.render("quizzes.ejs")
 });
 
 app.get('/view',(req, res) => {
-    res.render('viewQuiz')
+    res.render('viewQuiz.ejs')
 })
 
 app.listen(port, () => {
