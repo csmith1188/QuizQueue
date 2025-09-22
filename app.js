@@ -97,8 +97,8 @@ app.get('/view',(req, res) => {
     res.render('viewQuiz.ejs')
 })
 
-app.get('/qqpage',(req, res) => {
-    res.render('qqPage.ejs')
+app.get('/queue',(req, res) => {
+    res.render('queue.ejs')
 })
 
 app.listen(port, () => {
