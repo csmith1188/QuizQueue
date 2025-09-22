@@ -97,6 +97,10 @@ app.get('/view',(req, res) => {
     res.render('viewQuiz.ejs')
 })
 
+app.get('/qqpage',(req, res) => {
+    res.render('qqPage.ejs')
+})
+
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
