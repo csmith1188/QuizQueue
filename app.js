@@ -33,11 +33,23 @@ const db = new sqlite3.Database(dbPath, (err) => {
     } else {
         console.log('Connected to the SQLite database.');
         db.run(`CREATE TABLE IF NOT EXISTS access (
-            "User"	INTEGER NOT NULL UNIQUE,
+            "User"	INTEGER NOT NULL,
 	        "Classes"	TEXT NOT NULL UNIQUE,
 	        "Lists"	TEXT NOT NULL,
-	        "Questions"	TEXT NOT NULL,
-	        PRIMARY KEY("User" AUTOINCREMENT)
+	        PRIMARY KEY("Lists" AUTOINCREMENT)
+        )`, (err) => {
+            if (err) {
+                console.error('Error creating table:', err.message);
+            }
+        });
+
+        db.run(`CREATE TABLE IF NOT EXISTS Questions(
+            "List" TEXT NOT NULL,
+            "Question" TEXT NOT NULL,
+            "Answer1" TEXT NOT NULL,
+            "Answer2" TEXT NOT NULL,
+            "Answer3" TEXT,
+            "Answer4" TEXT
         )`, (err) => {
             if (err) {
                 console.error('Error creating table:', err.message);
@@ -61,6 +73,17 @@ socket.on('connection', (socket) => {
             }
         });
     });
+
+    socket.on('addQuestion', () => {
+        db.all(`SELECT * FROM Questions`, [], (err, rows) => {
+            if(err) {
+                console.error('Error fetching questions:', err.message);
+                socket.emit('questionsData', { error: 'Error fetching questions' });
+            } else {
+                socket.emit('questionsData', rows);
+            }
+        });
+    });
 });
 */
 
@@ -69,19 +92,20 @@ app.get('/', (req, res) => {
     res.render('home');
 });
 
-app.get('/add', (req, res) => {
-    res.render('addQ');
+app.get('/addQuestion', (req, res) => {
+    res.render('addQuestion');
 });
 
-app.post('/add', (req, res) => {
-    const Qdata = {
-        question : req.body.addQ,
-        answer1 : req.body.answer1,
-        answer2 : req.body.answer2,
-        answer3 : req.body.answer3,
-        answer4 : req.body.answer4}
-    
-    console.log(Qdata);
+app.post('/addQuestion', (req, res) => {
+    /*var question = req.body.addQuestion
+    var answer1 = req.body.answer1
+    var answer2 = req.body.answer2
+    var answer3 = req.body.answer3
+    var answer4 = req.body.answer4
+
+
+    db.run(`INSERT INTO Questions (list, question, answer1, answer2, answer3, answer4) VALUES (?,?,?,?,?,?))`)
+    res.redirect('addQuestion');*/
 });
 
 app.get('/class', (req, res) => {
@@ -93,10 +117,20 @@ app.get('/quizzes', (req, res) => {
     res.render("quizzes.ejs")
 });
 
-app.get('/view',(req, res) => {
+app.post('/quizzes', (req, res) => {
+    
+
+});
+
+app.get('/viewQuiz', (req, res) => {
     res.render('viewQuiz.ejs')
 })
 
+app.get('/viewQuestion', (req, res) => {
+    res.render('viewQuestion.ejs')
+});
+
+// Start the server
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
