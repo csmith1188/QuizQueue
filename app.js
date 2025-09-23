@@ -97,6 +97,70 @@ app.get('/view',(req, res) => {
     res.render('viewQuiz.ejs')
 })
 
+app.get('/queue',(req, res) => {
+    res.render('queue.ejs')
+})
+
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
+
+// FORMBAR STUFF
+const FORMBAR_URL = 'http://172.16.3.159:420/';
+const API_KEY = '0c396ef91f031c6a36624a832487f55930f0c4dc8e414a0d49711aa47e845101';
+
+const socket = io(FORMBAR_URL, {
+    extraHeaders: {
+        api: API_KEY
+    }
+});
+
+socket.on('connect', () => {
+    console.log('Connected');
+    socket.emit('getActiveClass');
+});
+
+socket.on('setClass', (newClassId) => {
+    console.log(`The user is currently in the class with id ${newClassId}`);
+});
+
+let classId = 1; // Class Id here
+let classCode = 'vmnt' // If you're not already in the classroom, you can join it by using the class code.
+socket.emit('joinClass', classId);
+socket.on('joinClass', (response) => {
+    // If joining the class is successful, it will return true.
+    if (response == true) {
+        console.log('Successfully joined class')
+        socket.emit('classUpdate')
+    } else {
+        // If not, try to join the classroom with the class code.
+        socket.emit('joinRoom', classCode);
+        console.log('Failed to join class: ' + response)
+    }
+});
+
+socket.on('classUpdate', (classroomData) => {
+    console.log(classroomData);
+});
+
+// True or false 
+socket.emit('pollResp', 'True')
+
+// Text response
+socket.emit('pollResp', '', 'Text response here')
+
+socket.on('connect_error', (error) => {
+    /*
+        "xhr poll error" is just the error it give when it can't connect,
+        which is usually when the Formbar is not on or you are not on the same network.
+    */
+    if (error.message == 'xhr poll error') {
+        console.log('no connection');
+    } else {
+            console.log(error.message);
+        }
+
+        setTimeout(() => {
+            socket.connect();
+        }, 5000);
+    });
