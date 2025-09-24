@@ -1,3 +1,5 @@
+// Import required modules
+const dotenv = require('dotenv');
 const express = require('express');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
@@ -5,23 +7,23 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const session = require('express-session');
-const { Server } = require('http');
+const http = require('http');
+const { Server } = require('socket.io');
 
+// Initialize Express app
 const app = express();
-const port = 3000;
-const http = require('http')
-const io = require('socket.io')(http);
+const port = process.env.PORT;
 
-const server = http.createServer(
-    (req, res) => {
-        console.log('Request received');
-    }
-);
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize dotenv
+dotenv.config();
 
 // Formbar Oauth URLs
 const FBJS_URL = 'https://formbeta.yorktechapps.com';
 const THIS_URL = 'http://localhost:3000/login';
-const API_KEY = '624f6db9b68f9e50ce824ee9e0e7a1f3c12aad336a554bb39d5d96fd60a788a4cdba4e5302e4d51a0045944d8b347e0f62c8eaf39921b3399b5a6974bce6fac8';
+const API_KEY = process.env.API_KEY;
 
 // Serve static files from the "public" directory
 app.use('/socket.io-client', express.static('./node_modules/socket.io-client/dist/'));
@@ -37,9 +39,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Middleware to initialize session
 app.use(session({
-    secret: 'quiz_queue_sk',
+    secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: true,
 }));
 
 function isAuthenticated(req, res, next) {
@@ -186,7 +188,7 @@ app.get('/queue', (req, res) => {
 
 // Start the server
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Server is running on http://localhost:3000${port}`);
 });
 
 // Socket.io
