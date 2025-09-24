@@ -3,26 +3,25 @@ const dotenv = require('dotenv');
 const express = require('express');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
-const bodyParser = require('body-parser');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const session = require('express-session');
 const http = require('http');
 const { Server } = require('socket.io');
 
+// Initialize dotenv
+dotenv.config();
+
 // Initialize Express app
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 
 // Create HTTP server
 const server = http.createServer(app);
 
-// Initialize dotenv
-dotenv.config();
-
 // Formbar Oauth URLs
 const FBJS_URL = 'https://formbeta.yorktechapps.com';
-const THIS_URL = 'http://localhost:3000/login';
+const THIS_URL = `http://localhost:${port}/login`;
 const API_KEY = process.env.API_KEY;
 
 // Serve static files from the "public" directory
@@ -35,7 +34,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Middleware to parse URL-encoded bodies
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 
 // Middleware to initialize session
 app.use(session({
@@ -188,7 +187,7 @@ app.get('/queue', (req, res) => {
 
 // Start the server
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:3000${port}`);
+    console.log(`Server is running on http://localhost:${port}`);
 });
 
 // Socket.io
