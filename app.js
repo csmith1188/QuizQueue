@@ -1,13 +1,19 @@
 const express = require('express');
-const http = require('http');
-const io = require('socket.io');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const fs = require('fs');
-
+const { Server } = require('http');
 const app = express();
 const port = 3000;
+const http = require('http')
+const io = require('socket.io')(http);
+
+const server = http.createServer(
+    (req, res) => {
+        console.log('Request received');
+    }
+);
 
 // Set the view engine to ejs
 app.set('view engine', 'ejs');
@@ -97,15 +103,25 @@ app.get('/addQuestion', (req, res) => {
 });
 
 app.post('/addQuestion', (req, res) => {
-    /*var question = req.body.addQuestion
-    var answer1 = req.body.answer1
-    var answer2 = req.body.answer2
-    var answer3 = req.body.answer3
-    var answer4 = req.body.answer4
+    questionData = {
+        List : req.body.List,
+        question: req.body.addQuestion,
+        answer1: req.body.answer1,
+        answer2: req.body.answer2,
+        answer3: req.body.answer3,
+        answer4: req.body.answer4
+    }
 
 
-    db.run(`INSERT INTO Questions (list, question, answer1, answer2, answer3, answer4) VALUES (?,?,?,?,?,?))`)
-    res.redirect('addQuestion');*/
+    db.run(`INSERT INTO Questions (List, Question, Answer1, Answer2, Answer3, Answer4) VALUES (?,?,?,?,?,?)`, questionData, function (err) {
+        if (err) {
+            console.error('Error inserting quiz:', err.message);
+        } else {
+            console.log(`A new question has been inserted`);
+        }
+    }
+    )
+    res.redirect('addQuestion');
 });
 
 app.get('/class', (req, res) => {
@@ -118,8 +134,16 @@ app.get('/quizzes', (req, res) => {
 });
 
 app.post('/quizzes', (req, res) => {
-    
-
+    var quizName = req.body.quizName;
+    if (quizName) {
+        db.run(`INSERT INTO access (User, Classes, Lists) VALUES (?,?,?)`, [1, 'Sample Class', quizName], function (err) {
+            if (err) {
+                console.error('Error inserting quiz:', err.message);
+            } else {
+                console.log(`A new quiz has been inserted with id ${this.lastID}`);
+            }
+        });
+    }
 });
 
 app.get('/viewQuiz', (req, res) => {
@@ -131,7 +155,7 @@ app.get('/viewQuestion', (req, res) => {
     res.render('viewQuestion.ejs')
 });
 
-app.get('/queue',(req, res) => {
+app.get('/queue', (req, res) => {
     res.render('queue.ejs')
 })
 
@@ -144,11 +168,7 @@ app.listen(port, () => {
 const FORMBAR_URL = 'http://172.16.3.159:420/';
 const API_KEY = '0c396ef91f031c6a36624a832487f55930f0c4dc8e414a0d49711aa47e845101';
 
-const socket = io(FORMBAR_URL, {
-    extraHeaders: {
-        api: API_KEY
-    }
-});
+const socket = new Server(server)
 
 socket.on('connect', () => {
     console.log('Connected');
@@ -192,10 +212,10 @@ socket.on('connect_error', (error) => {
     if (error.message == 'xhr poll error') {
         console.log('no connection');
     } else {
-            console.log(error.message);
-        }
+        console.log(error.message);
+    }
 
-        setTimeout(() => {
-            socket.connect();
-        }, 5000);
-    });
+    setTimeout(() => {
+        socket.connect();
+    }, 5000);
+});
