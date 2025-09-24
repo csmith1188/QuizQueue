@@ -3,7 +3,10 @@ const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const bodyParser = require('body-parser');
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
+const session = require('express-session');
 const { Server } = require('http');
+
 const app = express();
 const port = 3000;
 const http = require('http')
@@ -15,6 +18,14 @@ const server = http.createServer(
     }
 );
 
+// Formbar Oauth URLs
+const FBJS_URL = 'https://formbeta.yorktechapps.com';
+const THIS_URL = 'http://localhost:3000/login';
+const API_KEY = '624f6db9b68f9e50ce824ee9e0e7a1f3c12aad336a554bb39d5d96fd60a788a4cdba4e5302e4d51a0045944d8b347e0f62c8eaf39921b3399b5a6974bce6fac8';
+
+// Serve static files from the "public" directory
+app.use('/socket.io-client', express.static('./node_modules/socket.io-client/dist/'));
+
 // Set the view engine to ejs
 app.set('view engine', 'ejs');
 
@@ -23,6 +34,18 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Middleware to parse URL-encoded bodies
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Middleware to initialize session
+app.use(session({
+    secret: 'quiz_queue_sk',
+    resave: false,
+    saveUninitialized: false
+}));
+
+function isAuthenticated(req, res, next) {
+    if (req.session.user) next()
+    else res.redirect(`/login?redirectURL=${THIS_URL}`)
+}
 
 // Check if the database file exists
 const dbPath = './database.db';
@@ -64,48 +87,50 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
-/*// Configure Websocket server to run on the same port as Express server
-const server = http.createServer(app);
-const socket = io(server);
-socket.on('connection', (socket) => {
-
-    socket.on('requestQuizzes', () => {
-        db.all("SELECT * FROM Lists", [], (err, rows) => {
-            if (err) {
-                console.error('Error fetching quizzes:', err.message);
-                socket.emit('quizzesData', { error: 'Error fetching quizzes' });
-            } else {
-                socket.emit('quizzesData', rows);
+//get and post requests
+app.get('/', isAuthenticated, (req, res) => {
+    try {
+        fetch(`${FBJS_URL}/api/me`, {
+            method: 'GET',
+            headers: {
+                'API': API_KEY,
+                'Content-Type': 'application/json'
             }
-        });
-    });
-
-    socket.on('addQuestion', () => {
-        db.all(`SELECT * FROM Questions`, [], (err, rows) => {
-            if(err) {
-                console.error('Error fetching questions:', err.message);
-                socket.emit('questionsData', { error: 'Error fetching questions' });
-            } else {
-                socket.emit('questionsData', rows);
-            }
-        });
-    });
-});
-*/
-
-// Meant for formbar Oauth testing
-app.get('/', (req, res) => {
-    res.render('home');
+        })
+            .then(response => {
+                return response.json();
+            })
+            .then(data => { 
+                req.session.user = data.displayName;
+                console.log(data); //log formbar user data for testing purposes
+            })
+            .then(() => {
+                res.render('home', { user: req.session.user });
+            })
+    }
+    catch (error) {
+        res.send(error.message)
+    }
 });
 
-app.get('/addQuestion', (req, res) => {
-    res.render('addQuestion');
+app.get('/login', (req, res) => {
+	if (req.query.token) {
+		let tokenData = jwt.decode(req.query.token)
+		req.session.token = tokenData
+		req.session.user = tokenData.displayName
+		res.redirect('/')
+	} else {
+		res.redirect(`${FBJS_URL}/oauth?redirectURL=${THIS_URL}`)
+	}
+})
+
+app.get('/add', (req, res) => {
+    res.render('addQ');
 });
 
-app.post('/addQuestion', (req, res) => {
-    questionData = {
-        List : req.body.List,
-        question: req.body.addQuestion,
+app.post('/add', (req, res) => {
+    const Qdata = {
+        question: req.body.addQ,
         answer1: req.body.answer1,
         answer2: req.body.answer2,
         answer3: req.body.answer3,
@@ -164,10 +189,7 @@ app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
 
-// FORMBAR STUFF
-const FORMBAR_URL = 'http://172.16.3.159:420/';
-const API_KEY = '0c396ef91f031c6a36624a832487f55930f0c4dc8e414a0d49711aa47e845101';
-
+// Socket.io
 const socket = new Server(server)
 
 socket.on('connect', () => {
