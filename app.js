@@ -125,10 +125,6 @@ app.get('/login', (req, res) => {
 	}
 })
 
-app.get('/add', (req, res) => {
-    res.render('addQ');
-});
-
 app.post('/add', (req, res) => {
     const Qdata = {
         question: req.body.addQ,
@@ -150,16 +146,12 @@ app.post('/add', (req, res) => {
     res.redirect('addQuestion');
 });
 
-app.get('/class', (req, res) => {
-    res.render('Class.ejs');
+
+app.get('/addQuiz', (req, res) => {
+    res.render("addQuiz.ejs")
 });
 
-
-app.get('/quizzes', (req, res) => {
-    res.render("quizzes.ejs")
-});
-
-app.post('/quizzes', (req, res) => {
+app.post('/addQuiz', (req, res) => {
     var quizName = req.body.quizName;
     if (quizName) {
         db.run(`INSERT INTO access (User, Classes, Lists) VALUES (?,?,?)`, [1, 'Sample Class', quizName], function (err) {
@@ -172,10 +164,13 @@ app.post('/quizzes', (req, res) => {
     }
 });
 
+app.get('/viewClass', (req, res) => {
+    res.render('viewClass.ejs');
+});
+
 app.get('/viewQuiz', (req, res) => {
     res.render('viewQuiz.ejs')
 })
-
 
 app.get('/viewQuestion', (req, res) => {
     res.render('viewQuestion.ejs')
