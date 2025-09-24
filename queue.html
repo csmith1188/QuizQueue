@@ -1,20 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz Queue</title>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script>
+        const socket = io("https://formbeta.yorktechapps.com/", {
+            extraHeaders: {
+                api: "a4c9743f4e26e3c8cd412bba542620e3db0dbb741d01ade241cd58bb899669f0"
+            }
+        });
+
+
+        socket.on('setClass', (newClassId) => {
+            console.log(`The user is currently in the class with id ${newClassId}`);
+        });
+    </script>
 </head>
+
 <body>
     <button onclick="loadList()">Load List</button>
     <button onclick="startPoll()">Start Formbar Poll</button>
     <button onclick="nextQuestion()">Next Question</button>
-    <button><a href="class">Back</a>></button>
+    <button onclick="resetQuestions()">Reset Questions</button>
+    <button onclick="window.location.href='viewQuiz'">Back</button>
     <div>
         <h1>Quiz Queue</h1>
         <div id="currentQuestion">
-            
-        <h2>Current Question:</h2>
+
+            <h2>Current Question:</h2>
             <p id="prompt">Prompt will go here</p>
             <ul id="options">
                 <li>Option 1</li>
@@ -26,24 +42,24 @@
     </div>
 </body>
 <script>
-
+    var questionNumber = 0;
     var testData = {
         questions: [
-            {id: 1, prompt: "What is 2+2?", options: ["3", "4", "5", "spatula"], correct: "4", correctIndex: 1},
-            {id: 2, prompt: "What is the capital of France?", options: ["Berlin", "Madrid", "Paris", "spatula"], correct: "Paris", correctIndex: 2},
-            {id: 3, prompt: "What is the largest planet?", options: ["Earth", "Jupiter", "Mars", "spatula"], correct: "Jupiter", correctIndex: 1}
+            { id: 1, prompt: "What is 2+2?", options: ["3", "4", "5", "spatula"], correct: "4", correctIndex: 1 },
+            { id: 2, prompt: "What is the capital of France?", options: ["Berlin", "Madrid", "Paris", "spatula"], correct: "Paris", correctIndex: 2 },
+            { id: 3, prompt: "What is the largest planet?", options: ["Earth", "Jupiter", "Mars", "spatula"], correct: "Jupiter", correctIndex: 1 }
         ]
     }
     function loadList() {
         //Simulate loading from server
-        let current = testData.questions[0];
+        let current = testData.questions[questionNumber];
         document.getElementById("prompt").innerText = current.prompt;
         let optionsList = document.getElementById("options");
         optionsList.innerHTML = "";
         current.options.forEach((option, index) => {
             let li = document.createElement("li");
             li.innerText = option;
-            if(index === current.correctIndex) {
+            if (index === current.correctIndex) {
                 li.style.fontWeight = "bold";
             }
             optionsList.appendChild(li);
@@ -53,9 +69,38 @@
 
     }
     function nextQuestion() {
+        questionNumber++;
+        if (questionNumber < testData.questions.length) {
+            loadList();
+        } else {
+            alert("No more questions in the queue.");
+        }
 
+        socket.emit('startPoll',
+            1,
+            false,
+            "Yo mama",
+            [{
+            "answer": "A",
+            "weight": 1,
+            "color": "#ff0000"
+        }],
+            false,
+            1,
+            [],
+            ["-1"],
+            [],
+            [],
+            false
+        )
+    };
+
+    function resetQuestions() {
+        questionNumber = 0;
+        loadList();
     }
 
     loadList();
 </script>
+
 </html>

@@ -4,12 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz Queue</title>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script>
+        const socket = io('http://localhost:420');
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+    </script>
 </head>
 <body>
     <button onclick="loadList()">Load List</button>
     <button onclick="startPoll()">Start Formbar Poll</button>
     <button onclick="nextQuestion()">Next Question</button>
-    <button><a href="class">Back</a>></button>
+    <button onclick="resetQuestions()">Reset Questions</button>
+    <button onclick="window.location.href='viewQuiz'">Back</button>
     <div>
         <h1>Quiz Queue</h1>
         <div id="currentQuestion">
@@ -26,7 +34,7 @@
     </div>
 </body>
 <script>
-
+    var questionNumber = 0;
     var testData = {
         questions: [
             {id: 1, prompt: "What is 2+2?", options: ["3", "4", "5", "spatula"], correct: "4", correctIndex: 1},
@@ -36,7 +44,7 @@
     }
     function loadList() {
         //Simulate loading from server
-        let current = testData.questions[0];
+        let current = testData.questions[questionNumber];
         document.getElementById("prompt").innerText = current.prompt;
         let optionsList = document.getElementById("options");
         optionsList.innerHTML = "";
@@ -53,7 +61,17 @@
 
     }
     function nextQuestion() {
+        questionNumber++;
+        if (questionNumber < testData.questions.length) {
+            loadList();
+        } else {
+            alert("No more questions in the queue.");
+        }
+    }
 
+    function resetQuestions() {
+        questionNumber = 0;
+        loadList();
     }
 
     loadList();

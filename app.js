@@ -165,8 +165,8 @@ app.listen(port, () => {
 });
 
 // FORMBAR STUFF
-const FORMBAR_URL = 'http://172.16.3.159:420/';
-const API_KEY = '0c396ef91f031c6a36624a832487f55930f0c4dc8e414a0d49711aa47e845101';
+const FORMBAR_URL = 'http://localhost:420'; // Change this if your Formbar is hosted somewhere else.
+const API_KEY = '01b457320ec6b70fa49763d239e2babb8baaa7831b45b175a3e1602b37018b2b';
 
 const socket = new Server(server)
 
