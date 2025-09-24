@@ -101,7 +101,7 @@ app.get('/', isAuthenticated, (req, res) => {
             .then(response => {
                 return response.json();
             })
-            .then(data => { 
+            .then(data => {
                 req.session.user = data.displayName;
                 console.log(data); //log formbar user data for testing purposes
             })
@@ -115,14 +115,14 @@ app.get('/', isAuthenticated, (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-	if (req.query.token) {
-		let tokenData = jwt.decode(req.query.token)
-		req.session.token = tokenData
-		req.session.user = tokenData.displayName
-		res.redirect('/')
-	} else {
-		res.redirect(`${FBJS_URL}/oauth?redirectURL=${THIS_URL}`)
-	}
+    if (req.query.token) {
+        let tokenData = jwt.decode(req.query.token)
+        req.session.token = tokenData
+        req.session.user = tokenData.displayName
+        res.redirect('/')
+    } else {
+        res.redirect(`${FBJS_URL}/oauth?redirectURL=${THIS_URL}`)
+    }
 })
 
 app.post('/add', (req, res) => {
@@ -135,17 +135,25 @@ app.post('/add', (req, res) => {
     }
 
 
-    db.run(`INSERT INTO Questions (List, Question, Answer1, Answer2, Answer3, Answer4) VALUES (?,?,?,?,?,?)`, questionData, function (err) {
-        if (err) {
-            console.error('Error inserting quiz:', err.message);
-        } else {
-            console.log(`A new question has been inserted`);
+    db.run(`INSERT INTO Questions (List, Question, Answer1, Answer2, Answer3, Answer4) VALUES (?,?,?,?,?,?)`, [req.body.list, Qdata.question, Qdata.answer1, Qdata.answer2, Qdata.answer3, Qdata.answer4],
+        function (err) {
+            if (err) {
+                console.error('Error inserting quiz:', err.message);
+            } else {
+                console.log(`A new question has been inserted`);
+            }
         }
-    }
     )
     res.redirect('addQuestion');
 });
 
+app.get('/addQuestion', (req, res) => {
+    res.render("addQuestion.ejs")
+});
+
+app.post('/addQuestion', (req, res) => {
+    //post logic for adding question data to database
+});
 
 app.get('/addQuiz', (req, res) => {
     res.render("addQuiz.ejs")
@@ -162,6 +170,24 @@ app.post('/addQuiz', (req, res) => {
             }
         });
     }
+});
+
+app.get('editQuestion', (req, res) => {
+    res.render('editQuestion.ejs')
+});
+
+app.post('/editQuestion', (req, res) => {
+    //post logic for editing question data in database
+    res.redirect('viewQuestion');
+});
+
+app.get('/editQuiz', (req, res) => {
+    res.render('editQuiz.ejs')
+});
+
+app.post('/editQuiz', (req, res) => {
+    //post logic for editing quiz data in database
+    res.redirect('viewQuiz');
 });
 
 app.get('/viewClass', (req, res) => {
