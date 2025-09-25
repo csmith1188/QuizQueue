@@ -38,27 +38,58 @@ const db = new sqlite3.Database(dbPath, (err) => {
         console.error('Error opening database:', err.message);
     } else {
         console.log('Connected to the SQLite database.');
-        db.run(`CREATE TABLE IF NOT EXISTS access (
-            "User"	INTEGER NOT NULL,
-	        "Classes"	TEXT NOT NULL UNIQUE,
-	        "Lists"	TEXT NOT NULL,
-	        PRIMARY KEY("Lists" AUTOINCREMENT)
-        )`, (err) => {
+        db.run(`CREATE TABLE IF NOT EXISTS "user" (
+	        "uid"	INTEGER NOT NULL UNIQUE,
+	        "username"	TEXT NOT NULL UNIQUE,
+	        "email"	TEXT NOT NULL UNIQUE,
+	        PRIMARY KEY("uid" AUTOINCREMENT)
+            );`, (err) => {
             if (err) {
-                console.error('Error creating table:', err.message);
+                console.error('Error creating table 1:', err.message);
             }
         });
 
-        db.run(`CREATE TABLE IF NOT EXISTS Questions(
-            "List" TEXT NOT NULL,
-            "Question" TEXT NOT NULL,
-            "Answer1" TEXT NOT NULL,
-            "Answer2" TEXT NOT NULL,
-            "Answer3" TEXT,
-            "Answer4" TEXT
-        )`, (err) => {
+        db.run(`CREATE TABLE IF NOT EXISTS classes(
+            "class" TEXT NOT NULL,
+            "uid" INTEGER NOT NULL,
+            "ownerID" INTEGER NOT NULL,
+            PRIMARY KEY("class")
+             )`, (err) => {
             if (err) {
-                console.error('Error creating table:', err.message);
+                console.error('Error creating table 2:', err.message);
+            }
+        });
+
+        db.run(`CREATE TABLE IF NOT EXISTS "quizzes" (
+	        "quizID"	INTEGER NOT NULL UNIQUE,
+	        "quizName"	TEXT NOT NULL UNIQUE,
+	        "class"	INTEGER NOT NULL UNIQUE,
+	        PRIMARY KEY("quizID" AUTOINCREMENT)
+        );`, (err) => {
+            if (err) {
+                console.error('Error creating table 3:', err.message);
+            }
+        });
+
+        db.run(`CREATE TABLE IF NOT EXISTS "questions" (
+	        "questionID"	INTEGER NOT NULL UNIQUE,
+	        "question"	TEXT NOT NULL,
+	        "quizID"	INTEGER NOT NULL,
+	        PRIMARY KEY("questionID" AUTOINCREMENT)
+        );`, (err) => {
+            if (err) {
+                console.error('Error creating table 4:', err.message);
+            }
+        });
+
+        db.run(`CREATE TABLE IF NOT EXISTS answers(
+            "answerID" INTEGER NOT NULL UNIQUE,
+            "questionID" INTEGER NOT NULL,
+            "answer" TEXT NOT NULL,
+            PRIMARY KEY("answerID" AUTOINCREMENT)
+            )`, (err) => {
+            if (err) {
+                console.error('Error creating table 5:', err.message);
             }
         });
     }
@@ -93,35 +124,11 @@ socket.on('connection', (socket) => {
 });
 */
 
-// Meant for formbar Oauth testing
+// Possibly create a module for the routes and import it here
+
+// Define routes
 app.get('/', (req, res) => {
     res.render('home');
-});
-
-app.get('/addQuestion', (req, res) => {
-    res.render('addQuestion');
-});
-
-app.post('/addQuestion', (req, res) => {
-    questionData = {
-        List : req.body.List,
-        question: req.body.addQuestion,
-        answer1: req.body.answer1,
-        answer2: req.body.answer2,
-        answer3: req.body.answer3,
-        answer4: req.body.answer4
-    }
-
-
-    db.run(`INSERT INTO Questions (List, Question, Answer1, Answer2, Answer3, Answer4) VALUES (?,?,?,?,?,?)`, questionData, function (err) {
-        if (err) {
-            console.error('Error inserting quiz:', err.message);
-        } else {
-            console.log(`A new question has been inserted`);
-        }
-    }
-    )
-    res.redirect('addQuestion');
 });
 
 app.get('/class', (req, res) => {
@@ -133,23 +140,32 @@ app.get('/quizzes', (req, res) => {
     res.render("quizzes.ejs")
 });
 
+app.get('/api/classes', (req, res) => {
+    db.all("SELECT * FROM quizzes", (err, rows) => {
+        if (err) { 
+            console.error('Error fetching quizzes:', err.message);
+            res.status(500).json({ error: 'Error fetching quizzes' });
+        } else {
+            res.json(rows);
+        }
+    })
+})
+
 app.post('/quizzes', (req, res) => {
-    var quizName = req.body.quizName;
-    if (quizName) {
-        db.run(`INSERT INTO access (User, Classes, Lists) VALUES (?,?,?)`, [1, 'Sample Class', quizName], function (err) {
-            if (err) {
-                console.error('Error inserting quiz:', err.message);
-            } else {
-                console.log(`A new quiz has been inserted with id ${this.lastID}`);
-            }
-        });
-    }
+
 });
 
 app.get('/viewQuiz', (req, res) => {
     res.render('viewQuiz.ejs')
 })
 
+app.get('/addQuestion', (req, res) => {
+    res.render('addQuestion');
+});
+
+app.post('/addQuestion', (req, res) => {
+
+});
 
 app.get('/viewQuestion', (req, res) => {
     res.render('viewQuestion.ejs')

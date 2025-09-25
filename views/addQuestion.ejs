@@ -11,16 +11,16 @@
         <input type="text" id="List" name="List" placeholder="Enter List Name here"> <br> <br>
         <input type="text" id="addQuestion" name="addQuestion" placeholder="Enter question here"> <br> <br>
 
-        <input type="text" id="amswer1" name="answer1" placeholder="Enter answer here(Required)"> <br>
-        <input type="text" id="answer2" name="answer2" placeholder="Enter answer here(Required)"> <br>
-        <input type="text" id="answer3" name="answer3" placeholder="Enter answer here(Optional)"> <br>
-        <input type="text" id="answer4" name="answer4" placeholder="Enter answer here(Optional)"> <br>
+        <input type="text" id="amswers1" name="answer1" placeholder="Enter answer here(Required)"> <br>
+        <input type="text" id="answers2" name="answer2" placeholder="Enter answer here(Required)"> <br>
+        <input type="text" id="answers3" name="answer3" placeholder="Enter answer here(Optional)"> <br>
+        <input type="text" id="answers4" name="answer4" placeholder="Enter answer here(Optional)"> <br>
 
     </form>
     <button type="submit" onclick="addQuestions()">Submit</button>
     <div>Done submitting questions: <a href="/">return home</a></div>
 </body>
-<script src="/socket.io/socket.io.js"></script>
+
 <script>
     //const socket = io(); // Establish connection to the server
     
@@ -30,14 +30,16 @@
 
     function addQuestions() {
         questions = document.getElementById('addQuestion');
-        answer1 = document.getElementById('answer1');
-        answer2 = document.getElementById('answer2');
+        answers1 = document.getElementById('answers1');
+        answers2 = document.getElementById('answers2');
 
         question = questions.value
-        answer1 = answer1.value
-        answer2 = answer2.value
+        answer1 = answers1.value
+        answer2 = answers2.value
+        
+        console.log(answers1)
 
-        if (!questions || !answer1 || !answer2) {
+        if (!questions || !answers1 || !answer2) {
             alert('Please fill at least the question and two answers.');
             return; 
         }
