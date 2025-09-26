@@ -16,7 +16,7 @@
 
         socket.on('setClass', (newClassId) => {
             console.log(`The user is currently in the class with id ${newClassId}`);
-        });        
+        });
         socket.on('classUpdate', (update) => {
             console.log(`update: ${update}`);
         });
@@ -45,7 +45,7 @@
 </body>
 <script>
     var pollStarted = false;
-    var questionNumber = 1;
+    var questionNumber = 0;
     var testData = {
         questions: [
             { id: 1, prompt: "What is 2+2?", options: ["3", "4", "5", "spatula"], correct: "4", correctIndex: 1 },
@@ -53,9 +53,10 @@
             { id: 3, prompt: "What is the largest planet?", options: ["Earth", "Jupiter", "Mars", "spatula"], correct: "Jupiter", correctIndex: 1 }
         ]
     }
+    var current = testData.questions[questionNumber];
     function loadList() {
         //Simulate loading from server
-        var current = testData.questions[questionNumber];
+        current = testData.questions[questionNumber];
         document.getElementById("prompt").innerText = current.prompt;
         let optionsList = document.getElementById("options");
         optionsList.innerHTML = "";
@@ -70,18 +71,16 @@
     }
     function startPoll() {
         socket.emit('startPoll',
-            questionNumber,
+            current.options.length,
             false,
             current.prompt,
-            [
-                current.options.forEach((option, index) => {
-                    return {
-                        "answer": option,
-                        "weight": 1,
-                        "color": "#ff0000"
-                    };
-                })
-            ],
+            current.options.map((option, index) => {
+                return {
+                    "answer": option,
+                    "weight": 1,
+                    "color": "#ff0000"
+                };
+            }),
             false,
             1,
             [],
@@ -89,26 +88,8 @@
             [],
             [],
             false
-        )
-
-        /* socket.emit('startPoll',
-            1,
-            false,
-            "Yo mama",
-            [{
-                "answer": "A",
-                "weight": 1,
-                "color": "#ff0000"
-            }],
-            false,
-            1,
-            [],
-            ["-1"],
-            [],
-            [],
-            false
-        )
-        pollStarted = true; */
+        );
+        pollStarted = true;
     };
 
     function nextQuestion() {
@@ -119,6 +100,7 @@
                 startPoll();
             } else {
                 alert("No more questions in the queue.");
+                resetQuestions();
                 pollStarted = false;
             }
         } else {
@@ -127,7 +109,7 @@
     };
 
     function resetQuestions() {
-        questionNumber = 1;
+        questionNumber = 0;
         loadList();
     }
 

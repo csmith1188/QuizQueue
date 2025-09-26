@@ -165,8 +165,8 @@ app.listen(port, () => {
 });
 
 // FORMBAR STUFF
-const FORMBAR_URL = 'http://localhost:420'; // Change this if your Formbar is hosted somewhere else.
-const API_KEY = '01b457320ec6b70fa49763d239e2babb8baaa7831b45b175a3e1602b37018b2b';
+const FORMBAR_URL = 'formbeta.yorktechapps.com'; // Change this if your Formbar is hosted somewhere else.
+const API_KEY = 'a4c9743f4e26e3c8cd412bba542620e3db0dbb741d01ade241cd58bb899669f0'; // Get your API key from https://formbeta.yorktechapps.com/dashboard
 
 const socket = new Server(server)
 
