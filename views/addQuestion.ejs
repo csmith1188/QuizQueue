@@ -8,16 +8,15 @@
 <body>
     <div>You are adding to quiz (Quiz Name here)<%- %></div>
     <form action="/addQuestion" method="POST">
-        <input type="text" id="List" name="List" placeholder="Enter List Name here"> <br> <br>
         <input type="text" id="addQuestion" name="addQuestion" placeholder="Enter question here"> <br> <br>
 
         <input type="text" id="amswers1" name="answer1" placeholder="Enter answer here(Required)"> <br>
         <input type="text" id="answers2" name="answer2" placeholder="Enter answer here(Required)"> <br>
         <input type="text" id="answers3" name="answer3" placeholder="Enter answer here(Optional)"> <br>
         <input type="text" id="answers4" name="answer4" placeholder="Enter answer here(Optional)"> <br>
-
+        <button type="submit" onclick="addQuestion()">Submit</button>
     </form>
-    <button type="submit" onclick="addQuestions()">Submit</button>
+
     <div>Done submitting questions: <a href="/">return home</a></div>
 </body>
 
@@ -27,23 +26,5 @@
     /*socket.on('addQuestion', () => {
         socket.emit('requestQuizzes');
     });*/
-
-    function addQuestions() {
-        questions = document.getElementById('addQuestion');
-        answers1 = document.getElementById('answers1');
-        answers2 = document.getElementById('answers2');
-
-        question = questions.value
-        answer1 = answers1.value
-        answer2 = answers2.value
-        
-        console.log(answers1)
-
-        if (!questions || !answers1 || !answer2) {
-            alert('Please fill at least the question and two answers.');
-            return; 
-        }
-           
-    }
 </script>
 </html>

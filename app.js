@@ -63,7 +63,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
         db.run(`CREATE TABLE IF NOT EXISTS "quizzes" (
 	        "quizID"	INTEGER NOT NULL UNIQUE,
 	        "quizName"	TEXT NOT NULL UNIQUE,
-	        "class"	INTEGER NOT NULL UNIQUE,
+	        "classID"	INTEGER,
 	        PRIMARY KEY("quizID" AUTOINCREMENT)
         );`, (err) => {
             if (err) {
@@ -137,22 +137,29 @@ app.get('/class', (req, res) => {
 
 
 app.get('/quizzes', (req, res) => {
-    res.render("quizzes.ejs")
-});
-
-app.get('/api/classes', (req, res) => {
-    db.all("SELECT * FROM quizzes", (err, rows) => {
-        if (err) { 
+    db.all("SELECT * FROM quizzes", [], (err, rows) => {
+        if (err) {
             console.error('Error fetching quizzes:', err.message);
-            res.status(500).json({ error: 'Error fetching quizzes' });
         } else {
-            res.json(rows);
+            res.render('quizzes', { quizzes: rows });
         }
     })
-})
+
+});
 
 app.post('/quizzes', (req, res) => {
+    var quizTitle = req.body.quizTitle;
+    
+    db.run(`INSERT INTO quizzes (quizName) VALUES (?)`, (quizTitle), function (err) {
+        if (err) {
+            console.error('Error inserting quiz:', err.message);
+        } else {
+            console.log(quizTitle)
+            console.log(`A new quiz has been created with ID ${this.lastID}`);
+            res.redirect('/quizzes')
+        }
 
+    })
 });
 
 app.get('/viewQuiz', (req, res) => {
@@ -164,7 +171,19 @@ app.get('/addQuestion', (req, res) => {
 });
 
 app.post('/addQuestion', (req, res) => {
+    var question = req.body.addQuestion
 
+    var answer1 = req.body.answer1;
+    var answer2 = req.body.answer2;
+    var answer3 = req.body.answer3;
+    var answer4 = req.body.answer4;
+
+    if (!question || !answer1 || !answer2) {
+        //To be further updated
+        res.send('Please fill in all required fields (question, answer 1, and answer 2). (Please refresh the page to try again)');
+    } else {
+        // Insert the question + answers into the database
+    }
 });
 
 app.get('/viewQuestion', (req, res) => {
