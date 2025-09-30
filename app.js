@@ -1,19 +1,31 @@
+// Import required modules
+const dotenv = require('dotenv');
 const express = require('express');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
-const bodyParser = require('body-parser');
 const fs = require('fs');
-const { Server } = require('http');
-const app = express();
-const port = 3000;
-const http = require('http')
-const io = require('socket.io')(http);
+const jwt = require('jsonwebtoken');
+const session = require('express-session');
+const http = require('http');
+const { Server } = require('socket.io');
 
-const server = http.createServer(
-    (req, res) => {
-        console.log('Request received');
-    }
-);
+// Initialize dotenv
+dotenv.config();
+
+// Initialize Express app
+const app = express();
+const port = process.env.PORT || 3000;
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Formbar Oauth URLs
+const FBJS_URL = 'https://formbeta.yorktechapps.com';
+const THIS_URL = `http://localhost:${port}/login`;
+const API_KEY = process.env.API_KEY;
+
+// Serve static files from the "public" directory
+app.use('/socket.io-client', express.static('./node_modules/socket.io-client/dist/'));
 
 // Set the view engine to ejs
 app.set('view engine', 'ejs');
@@ -22,7 +34,19 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Middleware to parse URL-encoded bodies
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
+
+// Middleware to initialize session
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+}));
+
+function isAuthenticated(req, res, next) {
+    if (req.session.user) next()
+    else res.redirect(`/login?redirectURL=${THIS_URL}`)
+}
 
 // Check if the database file exists
 const dbPath = './database.db';
@@ -95,96 +119,115 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
-/*// Configure Websocket server to run on the same port as Express server
-const server = http.createServer(app);
-const socket = io(server);
-socket.on('connection', (socket) => {
+//get and post requests
+app.get('/', isAuthenticated, (req, res) => {
+    try {
+        fetch(`${FBJS_URL}/api/me`, {
+            method: 'GET',
+            headers: {
+                'API': API_KEY,
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => {
+                return response.json();
+            })
+            .then(data => {
+                req.session.user = data.displayName;
+                console.log(data); //log formbar user data for testing purposes
+            })
+            .then(() => {
+                res.render('home', { user: req.session.user });
+            })
+    }
+    catch (error) {
+        res.send(error.message)
+    }
+});
 
-    socket.on('requestQuizzes', () => {
-        db.all("SELECT * FROM Lists", [], (err, rows) => {
+app.get('/login', (req, res) => {
+    if (req.query.token) {
+        let tokenData = jwt.decode(req.query.token)
+        req.session.token = tokenData
+        req.session.user = tokenData.displayName
+        res.redirect('/')
+    } else {
+        res.redirect(`${FBJS_URL}/oauth?redirectURL=${THIS_URL}`)
+    }
+})
+
+app.post('/add', (req, res) => {
+    const Qdata = {
+        question: req.body.addQ,
+        answer1: req.body.answer1,
+        answer2: req.body.answer2,
+        answer3: req.body.answer3,
+        answer4: req.body.answer4
+    }
+
+
+    db.run(`INSERT INTO Questions (List, Question, Answer1, Answer2, Answer3, Answer4) VALUES (?,?,?,?,?,?)`, [req.body.list, Qdata.question, Qdata.answer1, Qdata.answer2, Qdata.answer3, Qdata.answer4],
+        function (err) {
             if (err) {
-                console.error('Error fetching quizzes:', err.message);
-                socket.emit('quizzesData', { error: 'Error fetching quizzes' });
+                console.error('Error inserting quiz:', err.message);
             } else {
-                socket.emit('quizzesData', rows);
+                console.log(`A new question has been inserted`);
+            }
+        }
+    )
+    res.redirect('addQuestion');
+});
+
+app.get('/addQuestion', (req, res) => {
+    res.render("addQuestion.ejs")
+});
+
+app.post('/addQuestion', (req, res) => {
+    //post logic for adding question data to database
+});
+
+app.get('/addQuiz', (req, res) => {
+    res.render("addQuiz.ejs")
+});
+
+app.post('/addQuiz', (req, res) => {
+    var quizName = req.body.quizName;
+    if (quizName) {
+        db.run(`INSERT INTO access (User, Classes, Lists) VALUES (?,?,?)`, [1, 'Sample Class', quizName], function (err) {
+            if (err) {
+                console.error('Error inserting quiz:', err.message);
+            } else {
+                console.log(`A new quiz has been inserted with id ${this.lastID}`);
             }
         });
-    });
-
-    socket.on('addQuestion', () => {
-        db.all(`SELECT * FROM Questions`, [], (err, rows) => {
-            if(err) {
-                console.error('Error fetching questions:', err.message);
-                socket.emit('questionsData', { error: 'Error fetching questions' });
-            } else {
-                socket.emit('questionsData', rows);
-            }
-        });
-    });
-});
-*/
-
-// Possibly create a module for the routes and import it here
-
-// Define routes
-app.get('/', (req, res) => {
-    res.render('home');
+    }
 });
 
-app.get('/class', (req, res) => {
-    res.render('Class.ejs');
+app.get('editQuestion', (req, res) => {
+    res.render('editQuestion.ejs')
 });
 
-
-app.get('/quizzes', (req, res) => {
-    db.all("SELECT * FROM quizzes", [], (err, rows) => {
-        if (err) {
-            console.error('Error fetching quizzes:', err.message);
-        } else {
-            res.render('quizzes', { quizzes: rows });
-        }
-    })
-
+app.post('/editQuestion', (req, res) => {
+    //post logic for editing question data in database
+    res.redirect('viewQuestion');
 });
 
-app.post('/quizzes', (req, res) => {
-    var quizTitle = req.body.quizTitle;
-    
-    db.run(`INSERT INTO quizzes (quizName) VALUES (?)`, (quizTitle), function (err) {
-        if (err) {
-            console.error('Error inserting quiz:', err.message);
-        } else {
-            console.log(quizTitle)
-            console.log(`A new quiz has been created with ID ${this.lastID}`);
-            res.redirect('/quizzes')
-        }
+app.get('/editQuiz', (req, res) => {
+    res.render('editQuiz.ejs')
+});
 
-    })
+app.post('/editQuiz', (req, res) => {
+    //post logic for editing quiz data in database
+    res.redirect('viewQuiz');
+});
+
+app.get('/viewClass', (req, res) => {
+    res.render('viewClass.ejs');
 });
 
 app.get('/viewQuiz', (req, res) => {
     res.render('viewQuiz.ejs')
 })
-
-app.get('/addQuestion', (req, res) => {
-    res.render('addQuestion');
-});
-
-app.post('/addQuestion', (req, res) => {
-    var question = req.body.addQuestion
-
-    var answer1 = req.body.answer1;
-    var answer2 = req.body.answer2;
-    var answer3 = req.body.answer3;
-    var answer4 = req.body.answer4;
-
-    if (!question || !answer1 || !answer2) {
-        //To be further updated
-        res.send('Please fill in all required fields (question, answer 1, and answer 2). (Please refresh the page to try again)');
-    } else {
-        // Insert the question + answers into the database
-    }
-});
 
 app.get('/viewQuestion', (req, res) => {
     res.render('viewQuestion.ejs')
@@ -199,10 +242,7 @@ app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });
 
-// FORMBAR STUFF
-const FORMBAR_URL = 'http://172.16.3.159:420/';
-const API_KEY = '0c396ef91f031c6a36624a832487f55930f0c4dc8e414a0d49711aa47e845101';
-
+// Socket.io
 const socket = new Server(server)
 
 socket.on('connect', () => {
