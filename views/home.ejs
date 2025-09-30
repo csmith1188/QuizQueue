@@ -5,15 +5,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script>
+        const socket = io("https://formbeta.yorktechapps.com/", {
+            extraHeaders: {
+                api: "a4c9743f4e26e3c8cd412bba542620e3db0dbb741d01ade241cd58bb899669f0"
+            }
+        });
+
+
+        socket.on('setClass', (newClassId) => {
+            console.log(`The user is currently in the class with id ${newClassId}`);
+        });
+        socket.on('classUpdate', (update) => {
+            console.log(`update: ${update}`);
+        });
+    </script>
 </head>
 
 <body>
     <h1>Choose a Class:</h1>
-    <a href="viewClass">Pick a class(placeholder)</a>
+    <div id="classList"></div>
 </body>
 
 <script>
-    //Page for home - choosing classes after login
+    var classList = document.getElementById("classList")
+    classList.innerHTML = socket.emit('getOwnedClasses',
+        "ownedClasses:",
+        "OwnedClass[]"
+    );
 </script>
 
 </html>
