@@ -6,34 +6,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+</head>
+
+<body>
+    <h1>Choose a Class:</h1>
+    <div id="classList"></div>
+
     <script>
-        const socket = io("https://formbeta.yorktechapps.com/", {
+        const socket = io("http://localhost:420/", {
             extraHeaders: {
-                api: "a4c9743f4e26e3c8cd412bba542620e3db0dbb741d01ade241cd58bb899669f0"
+                api: "01b457320ec6b70fa49763d239e2babb8baaa7831b45b175a3e1602b37018b2b"
             }
         });
 
-
+        socket.onAny((event, ...args) => {
+            console.log(`got ${event}`);
+            console.log(args);
+        });
         socket.on('setClass', (newClassId) => {
             console.log(`The user is currently in the class with id ${newClassId}`);
         });
         socket.on('classUpdate', (update) => {
             console.log(`update: ${update}`);
         });
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            socket.emit('getOwnedClasses', ['testChris', '1']);
+        });
+        var classList = document.getElementById("classList")
     </script>
-</head>
-
-<body>
-    <h1>Choose a Class:</h1>
-    <div id="classList"></div>
 </body>
-
-<script>
-    var classList = document.getElementById("classList")
-    classList.innerHTML = socket.emit('getOwnedClasses',
-        "ownedClasses:",
-        "OwnedClass[]"
-    );
-</script>
-
 </html>
