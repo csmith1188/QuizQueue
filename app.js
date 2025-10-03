@@ -38,7 +38,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Middleware to initialize session
 app.use(session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || 'secretFillerKey',
     resave: false,
     saveUninitialized: true,
 }));
