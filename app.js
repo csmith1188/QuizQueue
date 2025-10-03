@@ -156,47 +156,60 @@ app.get('/login', (req, res) => {
     }
 })
 
-app.post('/add', (req, res) => {
-    const Qdata = {
-        question: req.body.addQ,
-        answer1: req.body.answer1,
-        answer2: req.body.answer2,
-        answer3: req.body.answer3,
-        answer4: req.body.answer4
-    }
-
-
-    db.run(`INSERT INTO Questions (List, Question, Answer1, Answer2, Answer3, Answer4) VALUES (?,?,?,?,?,?)`, [req.body.list, Qdata.question, Qdata.answer1, Qdata.answer2, Qdata.answer3, Qdata.answer4],
-        function (err) {
-            if (err) {
-                console.error('Error inserting quiz:', err.message);
-            } else {
-                console.log(`A new question has been inserted`);
-            }
-        }
-    )
-    res.redirect('addQuestion');
-});
-
 app.get('/questions', (req, res) => {
     res.render("questions.ejs")
 });
 
+// app.post('/addQuestions', (req, res) => {
+//     const Qdata = {
+//         question: req.body.addQ,
+//         answer1: req.body.answer1,
+//         answer2: req.body.answer2,
+//         answer3: req.body.answer3,
+//         answer4: req.body.answer4
+//     }
+
+
+//     db.run(`INSERT INTO Questions (List, Question, Answer1, Answer2, Answer3, Answer4) VALUES (?,?,?,?,?,?)`, [req.body.list, Qdata.question, Qdata.answer1, Qdata.answer2, Qdata.answer3, Qdata.answer4],
+//         function (err) {
+//             if (err) {
+//                 console.error('Error inserting quiz:', err.message);
+//             } else {
+//                 console.log(`A new question has been inserted`);
+//             }
+//         }
+//     )
+//     res.redirect('addQuestion');
+// });
+
 app.get('/quizzes', (req, res) => {
-    res.render("quizzes.ejs")
+    db.all(`SELECT quizID, quizName FROM quizzes`, [], (err, rows) => {
+        if (err) {
+            console.error('Error fetching quizzes:', err.message);
+            return res.status(500).send('Failed to fetch quizzes.');
+        }
+
+        // Render the quizzes.ejs page with the list of quizzes
+        res.render('quizzes.ejs', { quizzes: rows });
+    });
 });
 
 app.post('/addQuiz', (req, res) => {
     var quizName = req.body.quizName;
-    if (quizName) {
-        db.run(`INSERT INTO access (User, Classes, Lists) VALUES (?,?,?)`, [1, 'Sample Class', quizName], function (err) {
-            if (err) {
-                console.error('Error inserting quiz:', err.message);
-            } else {
-                console.log(`A new quiz has been inserted with id ${this.lastID}`);
-            }
-        });
+
+    if (!quizName) {
+        return res.status(400).send('Quiz name is required.');
     }
+
+    db.run(`INSERT INTO quizzes (quizName) VALUES (?)`, [quizName], function (err) {
+        if (err) {
+            console.error('Error inserting quiz:', err.message);
+            return res.status(500).send('Failed to add quiz.');
+        }
+
+        console.log(`A new quiz has been inserted with the name: ${quizName}`);
+        res.redirect('/quizzes');
+    });
 });
 
 app.get('/queue', (req, res) => {

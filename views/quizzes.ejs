@@ -11,49 +11,63 @@
     <h1>Create a new Quiz:</h1>
     <form action="/addQuiz" method="POST">
         <label for="quizTitle">Quiz Title:</label>
-        <input type="text" id="quizTitle" name="quizTitle" placeholder="Quiz Title">
-        <button onclick="createQuiz()">Create Quiz</button>
+        <input type="text" id="quizTitle" name="quizName" placeholder="Quiz Title">
+        <button type="submit">Create Quiz</button>
     </form>
     <br>
-    <h2>Existing Quizzes:</h2>
-    <div id="quizList">
-    </div>
+    <br>
+    <h1>Edit an Existing Quiz:</h1>
+    <form action="/editQuiz" method="POST">
+        <label for="quizSelection">Select a Quiz to Edit:</label>
+        <select id="quizSelection" name="quizSelection">
+            <option value="" disabled selected>Select a quiz</option>
+        </select>
+    </form>
+    <br>
+    <button onclick="editQuiz()">Edit Quiz</button>
 </body>
 
-<script src="/socket.io/socket.io.js"></script>
+
 <script>
-    //const socket = io(); // Establish connection to the server
     const quizList = document.getElementById('quizList');
-    const quizzes = [];
+    const quizSelection = document.getElementById('quizSelection');
+
+    const quizzes = `<%- JSON.stringify(quizzes) %>`;
 
     function updateQuizList(quizzes) {
         quizList.innerHTML = '';
-        quizzes.forEach((quiz, index) => {
-            const quizItem = document.createElement('a');
-            quizItem.textContent = `${index + 1}. ${quiz.title}`;
-            quizItem.href = `/questions?quizTitle=${encodeURIComponent(quiz.title)}`;
-            quizList.appendChild(quizItem);
+        quizSelection.innerHTML = '<option value="" disabled selected>Select a quiz</option>';
+
+        quizzes.forEach(quiz => {
+            console.log(quiz);
+            const quizLink = document.createElement('a');
+            quizLink.textContent = `${quiz.quizName}`;
+            quizLink.href = `/questions?quizTitle=${encodeURIComponent(quiz.quizName)}`;
+            quizList.appendChild(quizLink);
+            quizList.appendChild(document.createElement('br'));
+
+            const quizOpt = document.createElement('option');
+            quizOpt.value = quiz.quizID + ". " + quiz.quizName;
+            quizOpt.textContent = quiz.quizName;
+            quizSelection.appendChild(quizOpt);
         });
-    }
+    };
 
-    function createQuiz() {
-        const quizTitleInput = document.getElementById('quizTitle');
-        const quizTitle = quizTitleInput.value;
-
-        if (quizTitle) {
-            const newQuiz = { title: quizTitle };
-            quizzes.push(newQuiz);
-            console.log(quizzes);
-            quizTitleInput.value = '';
-            updateQuizList(quizzes);
+    function editQuiz() {
+        if (!quizSelection.value) {
+            alert('Please select a quiz to edit.');
         } else {
-            alert('Please enter a quiz title.');
+            if (!quizSelection.value) {
+                alert('Please select a quiz to edit.');
+                return;
+            }
+            const selectedQuiz = quizSelection.value;
+            window.location.href = `/editQuiz?quizTitle=${encodeURIComponent(selectedQuiz)}`;
         }
     }
 
-    /*socket.on('connect', () => {
-        socket.emit('requestQuizzes');
-    });*/
+    // Initial rendering of the quiz list
+    onload = updateQuizList(JSON.parse(quizzes));
 </script>
 
 </html>
