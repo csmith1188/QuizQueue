@@ -178,16 +178,12 @@ app.post('/add', (req, res) => {
     res.redirect('addQuestion');
 });
 
-app.get('/addQuestion', (req, res) => {
-    res.render("addQuestion.ejs")
+app.get('/questions', (req, res) => {
+    res.render("questions.ejs")
 });
 
-app.post('/addQuestion', (req, res) => {
-    //post logic for adding question data to database
-});
-
-app.get('/addQuiz', (req, res) => {
-    res.render("addQuiz.ejs")
+app.get('/quizzes', (req, res) => {
+    res.render("quizzes.ejs")
 });
 
 app.post('/addQuiz', (req, res) => {
@@ -201,36 +197,6 @@ app.post('/addQuiz', (req, res) => {
             }
         });
     }
-});
-
-app.get('editQuestion', (req, res) => {
-    res.render('editQuestion.ejs')
-});
-
-app.post('/editQuestion', (req, res) => {
-    //post logic for editing question data in database
-    res.redirect('viewQuestion');
-});
-
-app.get('/editQuiz', (req, res) => {
-    res.render('editQuiz.ejs')
-});
-
-app.post('/editQuiz', (req, res) => {
-    //post logic for editing quiz data in database
-    res.redirect('viewQuiz');
-});
-
-app.get('/viewClass', (req, res) => {
-    res.render('viewClass.ejs');
-});
-
-app.get('/viewQuiz', (req, res) => {
-    res.render('viewQuiz.ejs')
-})
-
-app.get('/viewQuestion', (req, res) => {
-    res.render('viewQuestion.ejs')
 });
 
 app.get('/queue', (req, res) => {

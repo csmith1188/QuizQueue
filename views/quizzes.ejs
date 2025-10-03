@@ -31,7 +31,7 @@
         quizzes.forEach((quiz, index) => {
             const quizItem = document.createElement('a');
             quizItem.textContent = `${index + 1}. ${quiz.title}`;
-            quizItem.href = `/viewQuiz?quizTitle=${encodeURIComponent(quiz.title)}`;
+            quizItem.href = `/questions?quizTitle=${encodeURIComponent(quiz.title)}`;
             quizList.appendChild(quizItem);
         });
     }
