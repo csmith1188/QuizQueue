@@ -5,69 +5,127 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quizzes</title>
+    <style>
+        form {
+            border: 1px solid black;
+            margin: 10px;
+            padding: 10px;
+        }
+
+        #quizDetails {
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Create a new Quiz:</h1>
     <form action="/addQuiz" method="POST">
+        <h1>Create a new Quiz:</h1>
         <label for="quizTitle">Quiz Title:</label>
         <input type="text" id="quizTitle" name="quizName" placeholder="Quiz Title">
         <button type="submit">Create Quiz</button>
     </form>
     <br>
-    <br>
-    <h1>Edit an Existing Quiz:</h1>
-    <form action="/editQuiz" method="POST">
+
+    <form id="quizSelectionForm" onsubmit="editQuiz(event)">
+        <h1>Edit a Quiz:</h1>
         <label for="quizSelection">Select a Quiz to Edit:</label>
         <select id="quizSelection" name="quizSelection">
             <option value="" disabled selected>Select a quiz</option>
         </select>
+        <button type="submit">Edit Quiz</button>
     </form>
     <br>
-    <button onclick="editQuiz()">Edit Quiz</button>
+
+    <div id="quizDetails">
+        <h1 id="quizDetailsTitle">Displaying Quiz: </h1>
+        <form id="changeQuizNameForm" onsubmit="changeQuizName(event)">
+            <h2>Change Quiz Name:</h2>
+            <input type="text" id="newQuizName" name="newQuizName" placeholder="Enter new quiz name here">
+            <button type="submit">Change Quiz Name</button>
+        </form>
+    </div>
+
+    <br>
+    <br>
+
 </body>
 
-
 <script>
-    const quizList = document.getElementById('quizList');
+    // assign elements to variables
     const quizSelection = document.getElementById('quizSelection');
+    const quizDetails = document.getElementById('quizDetails');
+    const quizDetailsTitle = document.getElementById('quizDetailsTitle');
+    const editQuizButton = document.querySelector('form[action="/editQuiz"] button');
 
+    // parse quizzes data from server
     const quizzes = `<%- JSON.stringify(quizzes) %>`;
 
+    document.addEventListener('DOMContentLoaded', () => {
+        const parsedQuizzes = JSON.parse(quizzes); // Parse the quizzes string
+        updateQuizList(parsedQuizzes);
+    });
+
+    // update quiz list and selection dropdown
     function updateQuizList(quizzes) {
-        quizList.innerHTML = '';
         quizSelection.innerHTML = '<option value="" disabled selected>Select a quiz</option>';
 
         quizzes.forEach(quiz => {
-            console.log(quiz);
-            const quizLink = document.createElement('a');
-            quizLink.textContent = `${quiz.quizName}`;
-            quizLink.href = `/questions?quizTitle=${encodeURIComponent(quiz.quizName)}`;
-            quizList.appendChild(quizLink);
-            quizList.appendChild(document.createElement('br'));
-
             const quizOpt = document.createElement('option');
-            quizOpt.value = quiz.quizID + ". " + quiz.quizName;
+            quizOpt.value = quiz.quizID
             quizOpt.textContent = quiz.quizName;
             quizSelection.appendChild(quizOpt);
         });
     };
 
-    function editQuiz() {
+    function editQuiz(event) {
+        event.preventDefault();
         if (!quizSelection.value) {
             alert('Please select a quiz to edit.');
-        } else {
-            if (!quizSelection.value) {
-                alert('Please select a quiz to edit.');
-                return;
-            }
-            const selectedQuiz = quizSelection.value;
-            window.location.href = `/editQuiz?quizTitle=${encodeURIComponent(selectedQuiz)}`;
+            return;
         }
+
+        quizDetails.style.display = 'block';
+        quizDetailsTitle.textContent = `Displaying Quiz: ${quizSelection.options[quizSelection.selectedIndex].text}`;
     }
 
-    // Initial rendering of the quiz list
-    onload = updateQuizList(JSON.parse(quizzes));
+    function changeQuizName(event) {
+        event.preventDefault();
+
+        const quizSelection = document.getElementById('quizSelection').value;
+        const newQuizName = document.getElementById('newQuizName').value;
+
+        if (!quizSelection) {
+            alert('Please select a quiz to edit.');
+            return;
+        }
+
+        if (!newQuizName) {
+            alert('Please enter a new quiz name.');
+            return;
+        }
+
+        fetch('/changeQuizName', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ quizSelection, newQuizName }),
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update quiz name.');
+                }
+                return response.json();
+            })
+            .then((data) => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+    };
+
 </script>
 
 </html>
