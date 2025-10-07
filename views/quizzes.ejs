@@ -39,10 +39,28 @@
 
     <div id="quizDetails">
         <h1 id="quizDetailsTitle">Displaying Quiz: </h1>
+
+        <button id="previewQuestionsButton" onclick="previewQuestions()">Preview Questions</button>
+        <button id="changeQuizNameButton">Change Quiz Name</button>
+        <button id="addQuestionButton">Add a Question</button>
+
+        <div id="previewQuestionsDiv"></div>
+
         <form id="changeQuizNameForm" onsubmit="changeQuizName(event)">
             <h2>Change Quiz Name:</h2>
             <input type="text" id="newQuizName" name="newQuizName" placeholder="Enter new quiz name here">
             <button type="submit">Change Quiz Name</button>
+        </form>
+
+        <form id="addQuestionForm" action="/addQuestion" method="GET">
+            <h2>Add a Question:</h2>
+            <input type="text" id="addQuestion" name="addQuestion" placeholder="Enter question here"> <br> <br>
+
+            <input type="text" id="answers1" name="answer1" placeholder="Enter answer here(Required)"> <br>
+            <input type="text" id="answers2" name="answer2" placeholder="Enter answer here(Required)"> <br>
+            <input type="text" id="answers3" name="answer3" placeholder="Enter answer here(Optional)"> <br>
+            <input type="text" id="answers4" name="answer4" placeholder="Enter answer here(Optional)"> <br>
+            <button type="submit" onclick="addQuestion()">Submit</button>
         </form>
     </div>
 
@@ -56,7 +74,9 @@
     const quizSelection = document.getElementById('quizSelection');
     const quizDetails = document.getElementById('quizDetails');
     const quizDetailsTitle = document.getElementById('quizDetailsTitle');
+    const previewQuestionsDiv = document.getElementById('previewQuestionsDiv');
     const editQuizButton = document.querySelector('form[action="/editQuiz"] button');
+    const newQuizName = document.getElementById('newQuizName').value;
 
     // parse quizzes data from server
     const quizzes = `<%- JSON.stringify(quizzes) %>`;
@@ -78,6 +98,42 @@
         });
     };
 
+    function previewQuestions() {
+        const quizID = quizSelection.value;
+        if (!quizID) {
+            alert('Please select a quiz to preview questions.');
+            return;
+        }
+
+        console.log('Selected Quiz ID:', quizID); // Debugging log
+
+        fetch(`/getQuestions?quizID=${quizID}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text(); // Read the response as plain text first
+            })
+            .then(text => {
+                try {
+                    const data = JSON.parse(text); // Parse the text as JSON
+                    if (!data || data.length === 0) {
+                        alert('No questions found for the selected quiz.');
+                        return;
+                    }
+                    console.log('Fetched Questions:', data); // Debugging log
+                    displayQuestions(data);
+                } catch (error) {
+                    console.error('Error parsing JSON:', error);
+                    alert('Invalid response from the server.');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching questions:', error);
+                alert('Error fetching questions. Please try again later.');
+            });
+    }
+
     function editQuiz(event) {
         event.preventDefault();
         if (!quizSelection.value) {
@@ -87,44 +143,8 @@
 
         quizDetails.style.display = 'block';
         quizDetailsTitle.textContent = `Displaying Quiz: ${quizSelection.options[quizSelection.selectedIndex].text}`;
+        previewQuestions();
     }
-
-    function changeQuizName(event) {
-        event.preventDefault();
-
-        const quizSelection = document.getElementById('quizSelection').value;
-        const newQuizName = document.getElementById('newQuizName').value;
-
-        if (!quizSelection) {
-            alert('Please select a quiz to edit.');
-            return;
-        }
-
-        if (!newQuizName) {
-            alert('Please enter a new quiz name.');
-            return;
-        }
-
-        fetch('/changeQuizName', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ quizSelection, newQuizName }),
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to update quiz name.');
-                }
-                return response.json();
-            })
-            .then((data) => {
-                console.log('Success:', data);
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-    };
 
 </script>
 

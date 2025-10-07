@@ -24,17 +24,7 @@
 </body>
 
 <script>
-        // assign elements to variables
 
-        // parse quizzes data from server
-        const quizzes = `<%- JSON.stringify(quizzes) %>`;
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const parsedQuizzes = JSON.parse(quizzes); // Parse the quizzes string
-            console.log(parsedQuizzes);
-            console.log(quizSelection);
-            updateQuizList(parsedQuizzes);
-        });
 </script>
 
 </html>

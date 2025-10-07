@@ -160,7 +160,7 @@ app.get('/questions', (req, res) => {
     res.render("questions.ejs");
 });
 
-app.post('/addQuestions', (req, res) => {
+app.get('/addQuestion', (req, res) => {
     const Qdata = {
         question: req.body.addQ,
         answer1: req.body.answer1,
@@ -178,7 +178,7 @@ app.post('/addQuestions', (req, res) => {
             }
         }
     )
-    res.redirect('addQuestion');
+    res.redirect('/questions');
 });
 
 app.get('/quizzes', (req, res) => {
@@ -211,8 +211,33 @@ app.post('/addQuiz', (req, res) => {
     });
 });
 
+app.get ('/getQuestions', (req, res) => {
+    const quizID = req.query.quizID;
+
+    console.log(quizID);
+    if (!quizID) {
+        return res.status(400).json({ error: 'quizID is required' });
+    }
+
+    try {
+        // Query the database for questions based on quizID
+        const result = []; // Replace with actual database query
+
+        if (!Array.isArray(result)) {
+            return res.status(500).json({ error: 'Invalid data format from database' });
+        }
+
+        res.json(result); // Return the questions as JSON
+
+    } catch (error) {
+        console.error('Error fetching questions:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.post('/changeQuizName', (req, res) => {
-    const { quizSelection, newQuizName } = req.body;
+    var quizSelection = req.body.quizSelection;
+    var newQuizName = req.body.newQuizName;
 
     if (!quizSelection) {
         return res.status(400).send('Quiz selection is required.');
