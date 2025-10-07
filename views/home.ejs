@@ -5,16 +5,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
 </head>
 
 <body>
     <h1>Choose a Class:</h1>
-    <a href="quizzes">Pick a class(placeholder)</a>
+    <button onclick="getClasses()">Refresh Classes</button>
+    <select id="classList"></select><br>
+    <button onclick="window.location.href='quizzes'">Go to Quizzes</button>
 </body>
 
 <script>
-    //Page for home - choosing classes after login
-    //All classes a teacher handles should be displayed here
+    const socket = io("http://localhost:420/", {
+        extraHeaders: {
+            api: "01b457320ec6b70fa49763d239e2babb8baaa7831b45b175a3e1602b37018b2b"
+        }
+    });
+    socket.onAny((event, ...args) => {
+        console.log(`got ${event}`);
+        console.log(args);
+    });
+    socket.on('setClass', (newClassId) => {
+        console.log(`The user is currently in the class with id ${newClassId}`);
+    });
+    socket.on('classUpdate', (update) => {
+        console.log(`update: ${update}`);
+    });
+    socket.on('connect', () => {
+        console.log('Connected to server');
+    });
+    var classes = [];
+    function getClasses() {
+        socket.emit('getOwnedClasses', '27cmartin@live.ytech.edu');
+    }
+
+    socket.on('ownedClasses', (receivedClasses) => {
+        classes = receivedClasses;
+        var selectClassList = document.getElementById("classList");
+        selectClassList.innerHTML = "";
+        classes.forEach(element => {
+            var option = document.createElement("option");
+            option.value = element.id;
+            option.text = element.name;
+            selectClassList.appendChild(option);
+        });
+        console.log(classes);
+    });
+
 </script>
+</body>
 
 </html>
