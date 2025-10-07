@@ -9,3 +9,8 @@
 logs
 *.log
 npm-debug.log*
+
+# Database files
+*.sqlite3
+*.db
+*.db-journal
