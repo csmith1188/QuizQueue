@@ -156,7 +156,7 @@ app.get('/login', (req, res) => {
     }
 })
 
-app.post('/add', (req, res) => {
+app.post('/addQuestions', (req, res) => {
     const Qdata = {
         question: req.body.addQ,
         answer1: req.body.answer1,
@@ -184,6 +184,10 @@ app.get('/questions', (req, res) => {
 
 app.get('/quizzes', (req, res) => {
     res.render("quizzes.ejs")
+});
+
+app.get('/viewQuiz', (req, res) => {
+    res.render("viewQuiz.ejs", { quizTitle: req.query.quizTitle })
 });
 
 app.post('/addQuiz', (req, res) => {

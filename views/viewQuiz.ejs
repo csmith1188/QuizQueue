@@ -6,13 +6,47 @@
     <title>Document</title>
 </head>
 <body>
-    <a href="viewQuestion">View Questions of chosen Quiz</a> <br>
-    <a href="addQuestion">Adding a question to existing quiz</a>
+    <h2>Quiz Name: <%= quizTitle %></h2>
+    <a href="/questions">Adding a question to this quiz</a>
+
+    <div>
+        <h3>Questions:</h3>
+        <div id="questionsList">
+            
+        </div>
+    </div>
 
 </body>
 <script>
     //Page for viewing all questions in a quiz
     //Pulls info from db and displays all in/under a certain quiz
     //Has a button to add a question and link to edit questions
+
+    var testData = {
+        quizName: "Sample Quiz",
+        questions: [
+            { id: 1, prompt: "What is 2+2?", options: ["3", "4", "5", "spatula"], correct: "4", correctIndex: 1 },
+            { id: 2, prompt: "What is the capital of France?", options: ["Berlin", "Madrid", "Paris", "spatula"], correct: "Paris", correctIndex: 2 },
+            { id: 3, prompt: "What is the largest planet?", options: ["Earth", "Jupiter", "Mars", "spatula"], correct: "Jupiter", correctIndex: 1 }
+        ]
+    }
+
+    function loadQuestions() {
+        //Simulate loading from server
+        const questionsListDiv = document.getElementById("questionsList");
+        testData.questions.forEach((question, index) => {
+            const questionDiv = document.createElement("div");
+            questionDiv.innerHTML = `
+                <h4>Q${index + 1}: ${question.prompt}</h4>
+                <ul>
+                    ${question.options.map((option, i) => `<li${i === question.correctIndex ? ' style="font-weight:bold;"' : ''}>${option}</li>`).join('')}
+                </ul>
+                <a href="/editQuestion?questionId=${question.id}">Edit this question</a>
+                <hr>
+            `;
+            questionsListDiv.appendChild(questionDiv);
+        });
+    }
+    loadQuestions();
 </script>
 </html>
