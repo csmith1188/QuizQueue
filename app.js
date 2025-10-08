@@ -160,16 +160,12 @@ app.get('/questions', (req, res) => {
     res.render("questions.ejs");
 });
 
-app.get('/addQuestion', (req, res) => {
-    const questionData = {
-        question: req.body.addQuestion,
-        answer1: req.body.answer1,
-        answer2: req.body.answer2,
-        answer3: req.body.answer3,
-        answer4: req.body.answer4
-    };
+app.post('/addQuestion', (req, res) => {
+    const quizID = req.query.quizSelection
+    const question = req.body.addQuestion
+    const answers = req.body.answers || []
 
-    db.run(`INSERT INTO Questions (List, Question, Answer1, Answer2, Answer3, Answer4) VALUES (?,?,?,?,?,?)`, [req.body.list, questionData.question, Qdata.answer1, Qdata.answer2, Qdata.answer3, Qdata.answer4],
+    db.run(`INSERT INTO questions (quizID, question) VALUES (?)`, [quizID, question],
         function (err) {
             if (err) {
                 console.error('Error inserting quiz:', err.message);
@@ -179,7 +175,19 @@ app.get('/addQuestion', (req, res) => {
         }
     )
 
-    res.redirect('quizzes.ejs');
+    answers.forEach(answer => {
+        db.run(`INSERT INTO answer (questionID, answer) VALUES (?, ?)`, [this.lastID, answer],
+            function (err) {
+                if (err) {
+                    console.error('Error inserting answer:', err.message);
+                } else {
+                    console.log(`A new answer has been inserted`);
+                }
+            }
+        )
+    });
+
+    res.redirect('/quizzes');
 });
 
 app.get('/quizzes', (req, res) => {
@@ -212,7 +220,7 @@ app.post('/addQuiz', (req, res) => {
     });
 });
 
-app.get ('/getQuestions', (req, res) => {
+app.get('/getQuestions', (req, res) => {
     const quizID = req.query.quizID;
 
     console.log(quizID);

@@ -40,13 +40,13 @@
     </form>
     <br>
 
-    <form id="quizSelectionForm" onsubmit="editQuiz(event)">
-        <h1>Edit a Quiz:</h1>
-        <label for="quizSelection">Select a Quiz to Edit:</label>
+    <form id="quizSelectionForm" onsubmit="viewQuiz(event)">
+        <h1>View and Edit a Quiz:</h1>
+        <label for="quizSelection">Select a Quiz to View:</label>
         <select id="quizSelection" name="quizSelection">
             <option value="" disabled selected>Select a quiz</option>
         </select>
-        <button type="submit">Edit Quiz</button>
+        <button type="submit">View Quiz</button>
     </form>
     <br>
 
@@ -59,6 +59,7 @@
 
         <div id="previewQuestionsDiv">
             <h2> Preview Questions: </h2>
+            <div id="previewQuestionList"></div>
         </div>
 
         <form id="changeQuizNameForm" onsubmit="changeQuizName(event)">
@@ -68,24 +69,26 @@
         </form>
 
         <div id="addQuestionForm">
-            <form id="chooseTypeForm" action="/addQuestion" method="GET">
+            <form id="chooseTypeForm">
                 <h2>Choose Question Type:</h2>
-                <input type="radio" name="questionTypeOptions" onclick="chooseQuestionType(multipleChoice)">Multiple Choice</input>
+                <input type="radio" name="questionTypeOptions" onclick="chooseQuestionType(multipleChoice)">Multiple
+                Choice</input>
                 <br>
-                <input type="radio" name="questionTypeOptions" onclick="chooseQuestionType(shortAnswer)">Short Answer</input>
+                <input type="radio" name="questionTypeOptions" onclick="chooseQuestionType(shortAnswer)">Short
+                Answer</input>
             </form>
 
-            <form id="multipleChoiceForm">
+            <form id="multipleChoiceForm" action="/addQuestion" method="POST">
                 <h3>Multiple Choice</h3>
                 <input type="text" id="addQuestion" name="addQuestion" placeholder="Enter question title here"> <br>
                 <br>
 
-                <input type="text" id="answers1" name="answer1" placeholder="Enter an answer here"> <br>
-                <input type="text" id="answers2" name="answer2" placeholder="Enter an answer here"> <br>
+                <input type="text" id="answer1" name="answer" placeholder="Enter an answer here"> <br>
+                <input type="text" id="answer2" name="answer" placeholder="Enter an answer here"> <br>
                 <button type="submit">Submit</button>
             </form>
 
-            <form id="shortAnswerForm">
+            <form id="shortAnswerForm" action="/addQuestion" method="POST">
                 <h3>Short Answer</h3>
                 <input type="text" id="addQuestion" name="addQuestion" placeholder="Enter question title here"> <br>
                 <br>
@@ -96,7 +99,8 @@
         </div>
 
         <br>
-        <br>
+        <button id="addToQueue">Add Quiz to Queue</button>
+    </div>
 
 </body>
 
@@ -105,7 +109,7 @@
 
     //user input elements
     const quizSelection = document.getElementById('quizSelection');
-    const editQuizButton = document.querySelector('form[action="/editQuiz"] button');
+    const viewQuizButton = document.querySelector('form[action="/viewQuiz"] button');
     const newQuizName = document.getElementById('newQuizName');
 
     //quiz details elements
@@ -114,6 +118,7 @@
 
     //quiz details sections
     const previewQuestions = document.getElementById('previewQuestionsDiv');
+    const previewList = document.getElementById('previewQuestionList');
     const changeQuizName = document.getElementById('changeQuizNameForm')
     const addQuestion = document.getElementById('addQuestionForm')
     const chooseType = document.getElementById('chooseTypeForm')
@@ -144,7 +149,7 @@
     };
 
     //on edit quiz button click
-    function editQuiz(event) {
+    function viewQuiz(event) {
         event.preventDefault();
         if (!quizSelection.value) {
             alert('Please select a quiz to edit.');
@@ -201,6 +206,14 @@
         type.style.display = 'block';
 
         previousType = type; // Update previousType to the currently selected type
+
+        if (type === multipleChoice) {
+            multipleChoice.addEventListener('submit', (event) => {
+                event.preventDefault();
+                retrieveAnswers();
+                multipleChoice.submit();
+            });
+        }
     }
 
     function previewQuestionsData() {
@@ -221,10 +234,10 @@
                 try {
                     const data = JSON.parse(text); // Parse the text as JSON
                     if (!data || data.length === 0) {
-                        previewQuestionsDiv.appendChild(document.createTextNode('No questions found for this quiz.'));
+                        previewList.textContent = 'No questions found for this quiz.';
                         return;
                     } else if (data) {
-                        previewQuestionsDiv.innerHTML = '<h2> Preview Questions: </h2>'; // Clear previous content
+                        previewList.textContent = ''; // Clear previous content
                         data.forEach((question, index) => {
                             const questionDiv = document.createElement('div');
 
@@ -240,7 +253,7 @@
                             });
                             questionDiv.appendChild(optionsList);
 
-                            previewQuestionsDiv.appendChild(questionDiv);
+                            previewList.appendChild(questionDiv);
                         });
                     }
 
@@ -255,6 +268,14 @@
                 console.error('Error fetching questions:', error);
                 alert('Error fetching questions. Please try again later.');
             });
+    }
+
+    function retrieveAnswers() {
+        const answerInputs = document.querySelectorAll('#multipleChoiceForm input[name="answer"]');
+        answers = Array.from(answerInputs)
+            .map(input => input.value.trim())
+            .filter(answer => answer !== ''); // Filter out empty answers
+        console.log('Retrieved Answers:', answers); // Debugging log
     }
 
 </script>
