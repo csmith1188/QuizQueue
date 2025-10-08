@@ -34,23 +34,26 @@
     socket.on('connect', () => {
         console.log('Connected to server');
     });
+    socket.on('ownedClasses', (ownedClasses) => {
+        classes = ownedClasses;
+        console.log(classes);
+        var select = document.getElementById("classList");
+        select.innerHTML = "";
+        for (var i = 0; i < classes.length; i++) {
+            var option = document.createElement("option");
+            option.value = classes[i].id;
+            option.text = classes[i].name;
+            select.appendChild(option);
+        }
+        select.onchange = function() {
+            var selectedClassId = this.value;
+            socket.emit('setClass', selectedClassId);
+        };
+    });
     var classes = [];
     function getClasses() {
-        socket.emit('getOwnedClasses', '27cmartin@live.ytech.edu');
+        console.log(socket.emit('getOwnedClasses', 'email'));
     }
-
-    socket.on('ownedClasses', (receivedClasses) => {
-        classes = receivedClasses;
-        var selectClassList = document.getElementById("classList");
-        selectClassList.innerHTML = "";
-        classes.forEach(element => {
-            var option = document.createElement("option");
-            option.value = element.id;
-            option.text = element.name;
-            selectClassList.appendChild(option);
-        });
-        console.log(classes);
-    });
 
 </script>
 </body>
