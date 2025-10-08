@@ -161,15 +161,15 @@ app.get('/questions', (req, res) => {
 });
 
 app.get('/addQuestion', (req, res) => {
-    const Qdata = {
-        question: req.body.addQ,
+    const questionData = {
+        question: req.body.addQuestion,
         answer1: req.body.answer1,
         answer2: req.body.answer2,
         answer3: req.body.answer3,
         answer4: req.body.answer4
     };
 
-    db.run(`INSERT INTO Questions (List, Question, Answer1, Answer2, Answer3, Answer4) VALUES (?,?,?,?,?,?)`, [req.body.list, Qdata.question, Qdata.answer1, Qdata.answer2, Qdata.answer3, Qdata.answer4],
+    db.run(`INSERT INTO Questions (List, Question, Answer1, Answer2, Answer3, Answer4) VALUES (?,?,?,?,?,?)`, [req.body.list, questionData.question, Qdata.answer1, Qdata.answer2, Qdata.answer3, Qdata.answer4],
         function (err) {
             if (err) {
                 console.error('Error inserting quiz:', err.message);
@@ -178,7 +178,8 @@ app.get('/addQuestion', (req, res) => {
             }
         }
     )
-    res.redirect('/questions');
+
+    res.redirect('quizzes.ejs');
 });
 
 app.get('/quizzes', (req, res) => {

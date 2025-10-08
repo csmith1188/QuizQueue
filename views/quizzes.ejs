@@ -6,13 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quizzes</title>
     <style>
-        form {
+        form,
+        #previewQuestionsDiv {
             border: 1px solid black;
             margin: 10px;
             padding: 10px;
         }
 
         #quizDetails {
+            display: none;
+            border: 1px solid black;
+            margin: 10px;
+            padding: 10px;
+        }
+
+        #previewQuestionsDiv,
+        #changeQuizNameForm,
+        #addQuestionForm,
+        #chooseQuestionType,
+        #multipleChoice,
+        #shortAnswer {
             display: none;
         }
     </style>
@@ -38,13 +51,15 @@
     <br>
 
     <div id="quizDetails">
-        <h1 id="quizDetailsTitle">Displaying Quiz: </h1>
+        <h1 id="quizDetailsTitle"></h1>
 
-        <button id="previewQuestionsButton" onclick="previewQuestions()">Preview Questions</button>
-        <button id="changeQuizNameButton">Change Quiz Name</button>
-        <button id="addQuestionButton">Add a Question</button>
+        <button id="previewQuestionsButton" onclick="display('previewQuestionsDiv')">Preview Questions</button>
+        <button id="changeQuizNameButton" onclick="display('changeQuizNameForm')">Change Quiz Name</button>
+        <button id="addQuestionButton" onclick="display('addQuestionForm')">Add a Question</button>
 
-        <div id="previewQuestionsDiv"></div>
+        <div id="previewQuestionsDiv">
+            <h2> Preview Questions: </h2>
+        </div>
 
         <form id="changeQuizNameForm" onsubmit="changeQuizName(event)">
             <h2>Change Quiz Name:</h2>
@@ -52,60 +67,148 @@
             <button type="submit">Change Quiz Name</button>
         </form>
 
-        <form id="addQuestionForm" action="/addQuestion" method="GET">
-            <h2>Add a Question:</h2>
-            <input type="text" id="addQuestion" name="addQuestion" placeholder="Enter question here"> <br> <br>
+        <div id="addQuestionForm">
+            <form id="chooseTypeForm" action="/addQuestion" method="GET">
+                <h2>Choose Question Type:</h2>
+                <input type="radio" name="questionTypeOptions" onclick="chooseQuestionType(multipleChoice)">Multiple Choice</input>
+                <br>
+                <input type="radio" name="questionTypeOptions" onclick="chooseQuestionType(shortAnswer)">Short Answer</input>
+            </form>
 
-            <input type="text" id="answers1" name="answer1" placeholder="Enter answer here(Required)"> <br>
-            <input type="text" id="answers2" name="answer2" placeholder="Enter answer here(Required)"> <br>
-            <input type="text" id="answers3" name="answer3" placeholder="Enter answer here(Optional)"> <br>
-            <input type="text" id="answers4" name="answer4" placeholder="Enter answer here(Optional)"> <br>
-            <button type="submit" onclick="addQuestion()">Submit</button>
-        </form>
-    </div>
+            <form id="multipleChoiceForm">
+                <h3>Multiple Choice</h3>
+                <input type="text" id="addQuestion" name="addQuestion" placeholder="Enter question title here"> <br>
+                <br>
 
-    <br>
-    <br>
+                <input type="text" id="answers1" name="answer1" placeholder="Enter an answer here"> <br>
+                <input type="text" id="answers2" name="answer2" placeholder="Enter an answer here"> <br>
+                <button type="submit">Submit</button>
+            </form>
+
+            <form id="shortAnswerForm">
+                <h3>Short Answer</h3>
+                <input type="text" id="addQuestion" name="addQuestion" placeholder="Enter question title here"> <br>
+                <br>
+
+                <input type="text" id="shortAnswer" name="shortAnswer" placeholder="Enter the answer here"> <br>
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+
+        <br>
+        <br>
 
 </body>
 
 <script>
     // assign elements to variables
+
+    //user input elements
     const quizSelection = document.getElementById('quizSelection');
+    const editQuizButton = document.querySelector('form[action="/editQuiz"] button');
+    const newQuizName = document.getElementById('newQuizName');
+
+    //quiz details elements
     const quizDetails = document.getElementById('quizDetails');
     const quizDetailsTitle = document.getElementById('quizDetailsTitle');
-    const previewQuestionsDiv = document.getElementById('previewQuestionsDiv');
-    const editQuizButton = document.querySelector('form[action="/editQuiz"] button');
-    const newQuizName = document.getElementById('newQuizName').value;
 
-    // parse quizzes data from server
+    //quiz details sections
+    const previewQuestions = document.getElementById('previewQuestionsDiv');
+    const changeQuizName = document.getElementById('changeQuizNameForm')
+    const addQuestion = document.getElementById('addQuestionForm')
+    const chooseType = document.getElementById('chooseTypeForm')
+    const multipleChoice = document.getElementById('multipleChoiceForm')
+    const shortAnswer = document.getElementById('shortAnswerForm')
+
+    let previousType = null; // To track the previously selected question type
+
+    //parse quizzes data from server
     const quizzes = `<%- JSON.stringify(quizzes) %>`;
 
     document.addEventListener('DOMContentLoaded', () => {
         const parsedQuizzes = JSON.parse(quizzes); // Parse the quizzes string
-        updateQuizList(parsedQuizzes);
+        console.log(parsedQuizzes); // Debugging: Check the quizzes data
+        updateQuizOptions(parsedQuizzes);
     });
 
-    // update quiz list and selection dropdown
-    function updateQuizList(quizzes) {
+    //update quiz selection dropdown
+    function updateQuizOptions(quizzes) {
         quizSelection.innerHTML = '<option value="" disabled selected>Select a quiz</option>';
 
         quizzes.forEach(quiz => {
-            const quizOpt = document.createElement('option');
-            quizOpt.value = quiz.quizID
-            quizOpt.textContent = quiz.quizName;
-            quizSelection.appendChild(quizOpt);
+            const newQuizOption = document.createElement('option');
+            newQuizOption.value = quiz.quizID
+            newQuizOption.textContent = quiz.quizName;
+            quizSelection.appendChild(newQuizOption);
         });
     };
 
-    function previewQuestions() {
+    //on edit quiz button click
+    function editQuiz(event) {
+        event.preventDefault();
+        if (!quizSelection.value) {
+            alert('Please select a quiz to edit.');
+            return;
+        }
+
+        quizDetails.style.display = 'block';
+        quizDetailsTitle.textContent = `Displaying Quiz: ${quizSelection.options[quizSelection.selectedIndex].text}`;
+    }
+
+    //on any section button click, display that section and hide others
+    function display(section) {
+        // Define all sections in an array
+        const sections = [previewQuestions, changeQuizName, addQuestion];
+
+        // Hide all sections
+        sections.forEach(section => {
+            section.style.display = 'none';
+        });
+
+        // Show the selected section
+        const selectedSection = document.getElementById(section);
+        if (selectedSection) {
+            selectedSection.style.display = 'block';
+        }
+
+        if (section === 'previewQuestionsDiv') {
+            previewQuestionsData();
+        }
+
+        if (section === 'addQuestionForm') {
+            //neither form displays by default
+            multipleChoice.style.display = 'none';
+            shortAnswer.style.display = 'none';
+
+            chooseQuestionType()
+        }
+    }
+
+    function chooseQuestionType(type) {
+        // if no type is selected, do nothing
+        if (!type) {
+            return;
+        }
+
+        const questionTypes = [multipleChoice, shortAnswer];
+
+        //hide all question type forms
+        questionTypes.forEach(questionType => {
+            questionType.style.display = 'none';
+        });
+
+        // Show the question type selection form
+        type.style.display = 'block';
+
+        previousType = type; // Update previousType to the currently selected type
+    }
+
+    function previewQuestionsData() {
         const quizID = quizSelection.value;
         if (!quizID) {
             alert('Please select a quiz to preview questions.');
             return;
         }
-
-        console.log('Selected Quiz ID:', quizID); // Debugging log
 
         fetch(`/getQuestions?quizID=${quizID}`)
             .then(response => {
@@ -118,9 +221,29 @@
                 try {
                     const data = JSON.parse(text); // Parse the text as JSON
                     if (!data || data.length === 0) {
-                        alert('No questions found for the selected quiz.');
+                        previewQuestionsDiv.appendChild(document.createTextNode('No questions found for this quiz.'));
                         return;
+                    } else if (data) {
+                        previewQuestionsDiv.innerHTML = '<h2> Preview Questions: </h2>'; // Clear previous content
+                        data.forEach((question, index) => {
+                            const questionDiv = document.createElement('div');
+
+                            const questionTitle = document.createElement('h3');
+                            questionTitle.textContent = `Question ${index + 1}: ${question.prompt}`;
+                            questionDiv.appendChild(questionTitle);
+
+                            const optionsList = document.createElement('ul');
+                            question.options.forEach(option => {
+                                const optionItem = document.createElement('li');
+                                optionItem.textContent = option;
+                                optionsList.appendChild(optionItem);
+                            });
+                            questionDiv.appendChild(optionsList);
+
+                            previewQuestionsDiv.appendChild(questionDiv);
+                        });
                     }
+
                     console.log('Fetched Questions:', data); // Debugging log
                     displayQuestions(data);
                 } catch (error) {
@@ -132,18 +255,6 @@
                 console.error('Error fetching questions:', error);
                 alert('Error fetching questions. Please try again later.');
             });
-    }
-
-    function editQuiz(event) {
-        event.preventDefault();
-        if (!quizSelection.value) {
-            alert('Please select a quiz to edit.');
-            return;
-        }
-
-        quizDetails.style.display = 'block';
-        quizDetailsTitle.textContent = `Displaying Quiz: ${quizSelection.options[quizSelection.selectedIndex].text}`;
-        previewQuestions();
     }
 
 </script>
