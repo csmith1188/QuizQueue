@@ -156,17 +156,16 @@ app.get('/login', (req, res) => {
     }
 })
 
-app.post('/add', (req, res) => {
-    const Qdata = {
-        question: req.body.addQ,
-        answer1: req.body.answer1,
-        answer2: req.body.answer2,
-        answer3: req.body.answer3,
-        answer4: req.body.answer4
-    }
+app.get('/questions', (req, res) => {
+    res.render("questions.ejs");
+});
 
+app.post('/addQuestion', (req, res) => {
+    const quizID = req.query.quizSelection
+    const question = req.body.addQuestion
+    const answers = req.body.answers || []
 
-    db.run(`INSERT INTO Questions (List, Question, Answer1, Answer2, Answer3, Answer4) VALUES (?,?,?,?,?,?)`, [req.body.list, Qdata.question, Qdata.answer1, Qdata.answer2, Qdata.answer3, Qdata.answer4],
+    db.run(`INSERT INTO questions (quizID, question) VALUES (?)`, [quizID, question],
         function (err) {
             if (err) {
                 console.error('Error inserting quiz:', err.message);
@@ -175,28 +174,97 @@ app.post('/add', (req, res) => {
             }
         }
     )
-    res.redirect('addQuestion');
-});
 
-app.get('/questions', (req, res) => {
-    res.render("questions.ejs")
+    answers.forEach(answer => {
+        db.run(`INSERT INTO answer (questionID, answer) VALUES (?, ?)`, [this.lastID, answer],
+            function (err) {
+                if (err) {
+                    console.error('Error inserting answer:', err.message);
+                } else {
+                    console.log(`A new answer has been inserted`);
+                }
+            }
+        )
+    });
+
+    res.redirect('/quizzes');
 });
 
 app.get('/quizzes', (req, res) => {
-    res.render("quizzes.ejs")
+    db.all(`SELECT quizID, quizName FROM quizzes`, [], (err, rows) => {
+        if (err) {
+            console.error('Error fetching quizzes:', err.message);
+            return res.status(500).send('Failed to fetch quizzes.');
+        }
+
+        // Render the quizzes.ejs page with the list of quizzes
+        res.render('quizzes.ejs', { quizzes: rows });
+    });
 });
 
 app.post('/addQuiz', (req, res) => {
     var quizName = req.body.quizName;
-    if (quizName) {
-        db.run(`INSERT INTO access (User, Classes, Lists) VALUES (?,?,?)`, [1, 'Sample Class', quizName], function (err) {
-            if (err) {
-                console.error('Error inserting quiz:', err.message);
-            } else {
-                console.log(`A new quiz has been inserted with id ${this.lastID}`);
-            }
-        });
+
+    if (!quizName) {
+        return res.status(400).send('Quiz name is required.');
     }
+
+    db.run(`INSERT INTO quizzes (quizName) VALUES (?)`, [quizName], function (err) {
+        if (err) {
+            console.error('Error inserting quiz:', err.message);
+            return res.status(500).send('Failed to add quiz.');
+        }
+
+        console.log(`A new quiz has been inserted with the name: ${quizName}`);
+        res.redirect('/quizzes');
+    });
+});
+
+app.get('/getQuestions', (req, res) => {
+    const quizID = req.query.quizID;
+
+    console.log(quizID);
+    if (!quizID) {
+        return res.status(400).json({ error: 'quizID is required' });
+    }
+
+    try {
+        // Query the database for questions based on quizID
+        const result = []; // Replace with actual database query
+
+        if (!Array.isArray(result)) {
+            return res.status(500).json({ error: 'Invalid data format from database' });
+        }
+
+        res.json(result); // Return the questions as JSON
+
+    } catch (error) {
+        console.error('Error fetching questions:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/changeQuizName', (req, res) => {
+    var quizSelection = req.body.quizSelection;
+    var newQuizName = req.body.newQuizName;
+
+    if (!quizSelection) {
+        return res.status(400).send('Quiz selection is required.');
+    }
+
+    if (!newQuizName) {
+        return res.status(400).send('New quiz name is required.');
+    }
+
+    db.run(`UPDATE quizzes SET quizName = ? WHERE quizID = ?`, [newQuizName, quizSelection], function (err) {
+        if (err) {
+            console.error('Error updating quiz name:', err.message);
+            return res.status(500).send('Failed to update quiz name.');
+        }
+
+        console.log(`Quiz ID ${quizID} has been updated to the new name: ${newQuizName}`);
+        res.redirect('/quizzes');
+    });
 });
 
 app.get('/queue', (req, res) => {
