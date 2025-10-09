@@ -202,6 +202,10 @@ app.get('/quizzes', (req, res) => {
     });
 });
 
+app.get('/viewQuiz', (req, res) => {
+    res.render("viewQuiz.ejs", { quizTitle: req.query.quizTitle })
+});
+
 app.post('/addQuiz', (req, res) => {
     var quizName = req.body.quizName;
 
