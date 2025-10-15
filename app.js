@@ -4,7 +4,6 @@ const express = require('express');
 const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
-const jwt = require('jsonwebtoken');
 const session = require('express-session');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -18,11 +17,6 @@ const port = process.env.PORT || 3000;
 
 // Create HTTP server
 const server = http.createServer(app);
-
-// Formbar Oauth URLs
-const FBJS_URL = 'https://formbeta.yorktechapps.com';
-const THIS_URL = `http://localhost:${port}/login`;
-const API_KEY = process.env.API_KEY;
 
 // Serve static files from the "public" directory
 app.use('/socket.io-client', express.static('./node_modules/socket.io-client/dist/'));
@@ -43,10 +37,20 @@ app.use(session({
     saveUninitialized: true,
 }));
 
-function isAuthenticated(req, res, next) {
-    if (req.session.user) next()
-    else res.redirect(`/login?redirectURL=${THIS_URL}`)
-}
+// Route handlers
+const auth = require('./routes/auth')
+const classes = require('./routes/classes')
+const questions = require('./routes/questions')
+const quizzes = require('./routes/quizzes')
+const queues = require('./routes/queues')
+
+// Use route handlers
+app.use( '/', auth );
+app.use( '/classes', classes );
+app.use( '/questions', questions );
+app.use( '/queue', queues );
+app.use( '/quizzes', quizzes );
+console.log('Route handlers loaded.');
 
 // Check if the database file exists
 const dbPath = './database.db';
@@ -116,31 +120,6 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 console.error('Error creating table 5:', err.message);
             }
         });
-    }
-});
-
-app.get('/', isAuthenticated, (req, res) => {
-    try {
-        fetch(`${FBJS_URL}/api/me`, {
-            method: 'GET',
-            headers: {
-                'API': API_KEY,
-                'Content-Type': 'application/json'
-            }
-        })
-            .then(response => {
-                return response.json();
-            })
-            .then(data => {
-                req.session.user = data.displayName;
-                console.log(data); //log formbar user data for testing purposes
-            })
-            .then(() => {
-                res.render('home', { user: req.session.user });
-            })
-    }
-    catch (error) {
-        res.send(error.message)
     }
 });
 

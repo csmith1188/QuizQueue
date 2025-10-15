@@ -1,4 +1,6 @@
 
+module.exports = function (app, db) {
+
 app.get('/questions', (req, res) => {
     res.render("questions.ejs");
 });
@@ -57,3 +59,5 @@ app.post('/addQuestion', (req, res) => {
 
     res.redirect('/quizzes');
 });
+
+};
