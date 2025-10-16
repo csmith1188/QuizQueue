@@ -50,9 +50,13 @@
             socket.emit('setClass', selectedClassId);
         };
     });
+
+    socket.on('getOwnedClasses', (data) => {
+        console.log(data);
+    });
     var classes = [];
     function getClasses() {
-        console.log(socket.emit('getOwnedClasses', 'email'));
+ socket.emit('getOwnedClasses', '27cmartin@live.ytech.edu')
     }
 
 </script>
