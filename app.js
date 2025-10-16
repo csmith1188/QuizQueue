@@ -41,13 +41,13 @@ app.use(session({
 }));
 
 // Set Route handlers
-const auth = require('./routes/auth')
-const classes = require('./routes/classes')
-const database = require('./routes/db')
-const questions = require('./routes/questions')
-const queue = require('./routes/queue')
-const quizzes = require('./routes/quizzes')
-const sio = require('./routes/socket')
+const auth = require('./server/routes/auth')
+const classes = require('./server/routes/classes')
+const database = require('./server/db')
+const questions = require('./server/routes/questions')
+const queue = require('./server/routes/queue')
+const quizzes = require('./server/routes/quizzes')
+const sio = require('./server/socket')
 
 // Initialize the database and store the ruturned db object
 const db = database(sqlite3, fs);
